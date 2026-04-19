@@ -1,0 +1,2112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-328WKM1RNP"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-328WKM1RNP');
+</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lucid</title>
+<link rel="icon" type="image/png" href="L.png">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script>pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';</script>
+<style>
+:root {
+  --bg:#0a0a08; --surface:#111110; --border:#222220;
+  --text-dim:#444440; --text-mid:#888880; --text:#d4d0c8;
+  --accent:#c8b89a; --accent-glow:rgba(200,184,154,0.15);
+  --focus:#e8dcc8; --word-dim:rgba(212,208,200,0.18); --context-color:rgba(200,184,154,0.3);
+}
+[data-theme="light"]{--bg:#f2ece0;--surface:#e8e0d0;--border:#ccc4b0;--text-dim:#aaa090;--text-mid:#706050;--text:#201a10;--accent:#8b6e3a;--accent-glow:rgba(139,110,58,0.12);--focus:#100c04;--word-dim:rgba(32,26,16,0.22);--context-color:rgba(139,110,58,0.55);}
+[data-theme="sepia"]{--bg:#180f04;--surface:#221608;--border:#3a2810;--text-dim:#604830;--text-mid:#a88858;--text:#e8c888;--accent:#d4a040;--accent-glow:rgba(212,160,64,0.12);--focus:#f8e0a0;--word-dim:rgba(232,200,136,0.2);--context-color:rgba(212,160,64,0.38);}
+
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--text);font-family:'DM Mono',monospace;min-height:100vh;display:flex;flex-direction:column;overflow:hidden;transition:background .35s,color .35s;}
+button,.drop-zone,input[type=range],.progress-container,.chapter-item{cursor:pointer;}
+
+/* ── AMBIENT COLOUR CYCLE ── */
+/* box-shadow is set directly by JS RAF loop — no class-based colours */
+#ambient-screen{position:fixed;inset:0;pointer-events:none;z-index:500;opacity:0;transition:opacity 1.5s ease;}
+#ambient-screen.active{opacity:1;}
+
+/* ── LANDING ── */
+#landing{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;position:relative;}
+#landing::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 60% 50% at 50% 40%,rgba(200,184,154,.05) 0%,transparent 70%);pointer-events:none;}
+.wordmark{font-family:'Cormorant Garamond',serif;font-size:clamp(3rem,8vw,6rem);font-weight:300;letter-spacing:.3em;color:var(--accent);text-transform:uppercase;margin-bottom:.15em;}
+.tagline{font-size:.65rem;letter-spacing:.25em;color:var(--text-dim);text-transform:uppercase;margin-bottom:3rem;}
+.drop-zone{width:min(460px,90vw);border:1px solid var(--border);border-radius:2px;padding:2.5rem 2rem;text-align:center;transition:all .3s;position:relative;background:var(--surface);}
+.drop-zone::before{content:'';position:absolute;inset:-1px;border-radius:2px;background:linear-gradient(135deg,var(--accent-glow),transparent,var(--accent-glow));opacity:0;transition:opacity .3s;}
+.drop-zone:hover::before,.drop-zone.drag-over::before{opacity:1;}
+.drop-zone:hover,.drop-zone.drag-over{border-color:var(--accent);}
+.drop-icon{font-size:1.8rem;margin-bottom:1rem;opacity:.4;}
+.drop-label{font-size:.7rem;letter-spacing:.15em;color:var(--text-mid);text-transform:uppercase;margin-bottom:.5rem;}
+.drop-sublabel{font-size:.6rem;letter-spacing:.1em;color:var(--text-dim);text-transform:uppercase;}
+#file-input{display:none;}
+.url-row{width:min(460px,90vw);margin-top:.75rem;display:flex;border:1px solid var(--border);border-radius:2px;background:var(--surface);overflow:hidden;transition:border-color .3s;}
+.url-row:focus-within{border-color:var(--accent);}
+#url-input{flex:1;background:none;border:none;outline:none;color:var(--text-mid);font-family:'DM Mono',monospace;font-size:.58rem;letter-spacing:.08em;padding:.7rem 1rem;}
+#url-input::placeholder{color:var(--text-dim);}
+#url-btn{background:rgba(0,0,0,.001);border:none;border-left:1px solid var(--border);color:var(--text-dim);font-family:'DM Mono',monospace;font-size:.52rem;letter-spacing:.15em;text-transform:uppercase;padding:.7rem 1rem;transition:color .2s;touch-action:manipulation;cursor:pointer;}
+#url-btn:hover{color:var(--accent);}
+.formats{margin-top:1.25rem;display:flex;gap:.6rem;justify-content:center;flex-wrap:wrap;}
+.format-tag{font-size:.52rem;letter-spacing:.15em;color:var(--text-dim);border:1px solid var(--border);padding:.25em .65em;border-radius:1px;text-transform:uppercase;}
+.recent-section{margin-top:2.5rem;width:min(460px,90vw);}
+.recent-header{font-size:.48rem;letter-spacing:.2em;color:var(--text-dim);text-transform:uppercase;margin-bottom:.6rem;display:flex;align-items:center;gap:.5rem;}
+.recent-header::after{content:'';flex:1;height:1px;background:var(--border);}
+.recent-list{display:flex;flex-direction:column;gap:.35rem;}
+.recent-item{display:flex;justify-content:space-between;align-items:center;padding:.45rem .75rem;border:1px solid var(--border);background:var(--surface);cursor:pointer;transition:border-color .2s;border-radius:1px;}
+.recent-item:hover{border-color:var(--accent);}
+.recent-name{font-size:.58rem;letter-spacing:.07em;color:var(--text-mid);text-transform:uppercase;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;}
+.recent-meta{font-size:.48rem;letter-spacing:.1em;color:var(--text-dim);margin-left:.6rem;white-space:nowrap;}
+.recent-del{background:rgba(0,0,0,.001);border:none;color:var(--text-dim);font-size:.65rem;line-height:1;padding:0 0 0 .6rem;opacity:0;transition:opacity .15s,color .15s;flex-shrink:0;touch-action:manipulation;cursor:pointer;}
+.recent-item:hover .recent-del{opacity:1;}
+.recent-del:hover{color:var(--accent)!important;}
+.resume-hint{margin-top:.5rem;font-size:.5rem;letter-spacing:.15em;color:var(--accent);text-transform:uppercase;text-align:center;opacity:0;height:0;overflow:hidden;transition:opacity .3s,height .3s;}
+.resume-hint.show{opacity:1;height:1.4em;}
+
+/* ── RESUME MODAL ── */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:400;display:none;align-items:center;justify-content:center;backdrop-filter:blur(4px);}
+.modal-overlay.open{display:flex;}
+.modal-box{background:var(--surface);border:1px solid var(--border);width:min(480px,90vw);padding:2rem;display:flex;flex-direction:column;gap:1.2rem;}
+.modal-title{font-family:'Cormorant Garamond',serif;font-size:1.6rem;font-weight:300;letter-spacing:.15em;color:var(--accent);}
+.modal-sub{font-size:.52rem;letter-spacing:.15em;color:var(--text-dim);text-transform:uppercase;}
+.modal-context{font-family:'Cormorant Garamond',serif;font-size:.95rem;font-weight:300;line-height:1.7;color:var(--text-mid);border-left:2px solid var(--border);padding-left:1rem;font-style:italic;max-height:4.5rem;overflow:hidden;}
+.modal-btns{display:flex;gap:.75rem;}
+.modal-btn{flex:1;font-family:'DM Mono',monospace;font-size:.55rem;letter-spacing:.15em;text-transform:uppercase;background:rgba(0,0,0,.001);border:1px solid var(--border);color:var(--text-mid);padding:.75em 1em;transition:all .2s;border-radius:1px;touch-action:manipulation;cursor:pointer;}
+.modal-btn:hover{border-color:var(--accent);color:var(--accent);}
+.modal-btn.primary{border-color:var(--accent);color:var(--accent);background:var(--accent-glow);}
+
+/* ── STATS PANEL ── */
+.stats-drawer{position:fixed;right:0;top:0;bottom:0;width:300px;background:var(--surface);border-left:1px solid var(--border);z-index:200;display:flex;flex-direction:column;transform:translateX(100%);transition:transform .3s ease;}
+.stats-drawer.open{transform:translateX(0);}
+.stats-drawer-head{padding:1.25rem 1.5rem;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;}
+.stats-drawer-title{font-size:.55rem;letter-spacing:.2em;color:var(--text-dim);text-transform:uppercase;}
+.stats-body{flex:1;overflow-y:auto;padding:1.25rem;}
+.stats-section{margin-bottom:1.5rem;}
+.stats-section-head{font-size:.44rem;letter-spacing:.22em;color:var(--text-dim);text-transform:uppercase;margin-bottom:.75rem;padding-bottom:.4rem;border-bottom:1px solid var(--border);}
+.stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:.6rem;}
+.stats-card{background:var(--bg);border:1px solid var(--border);padding:.75rem .85rem;border-radius:1px;}
+.stats-card-val{font-size:1.1rem;color:var(--accent);letter-spacing:.04em;margin-bottom:.2em;}
+.stats-card-lbl{font-size:.42rem;letter-spacing:.15em;color:var(--text-dim);text-transform:uppercase;}
+.stats-insight{font-size:.52rem;letter-spacing:.06em;color:var(--text-mid);line-height:1.7;padding:.6rem .75rem;background:var(--bg);border:1px solid var(--border);border-radius:1px;}
+
+/* ── VOCAB POPUP ── */
+.vocab-popup{position:fixed;left:50%;transform:translateX(-50%);top:18%;background:var(--surface);border:1px solid var(--border);padding:1rem 1.2rem;width:min(300px,80vw);z-index:600;box-shadow:0 8px 32px rgba(0,0,0,.5);display:none;}
+.vocab-popup.show{display:block;animation:fadeIn .18s ease;}
+.vocab-word{font-family:'Cormorant Garamond',serif;font-size:1.2rem;font-weight:300;color:var(--accent);letter-spacing:.05em;}
+.vocab-phonetic{font-size:.48rem;letter-spacing:.1em;color:var(--text-dim);margin-top:.15rem;margin-bottom:.6rem;}
+.vocab-def{font-size:.58rem;letter-spacing:.04em;color:var(--text-mid);line-height:1.65;}
+.vocab-pos{font-size:.44rem;letter-spacing:.12em;color:var(--text-dim);text-transform:uppercase;margin-top:.4rem;}
+.vocab-loading{font-size:.52rem;letter-spacing:.1em;color:var(--text-dim);text-transform:uppercase;}
+.vocab-close{position:absolute;top:.5rem;right:.6rem;background:rgba(0,0,0,.001);border:none;color:var(--text-dim);font-size:.7rem;cursor:pointer;touch-action:manipulation;}
+.vocab-close:hover{color:var(--accent);}
+
+/* ── TUTORIAL MODAL ── */
+.tutorial-overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:700;display:none;align-items:center;justify-content:center;backdrop-filter:blur(6px);}
+.tutorial-overlay.open{display:flex;}
+.tutorial-box{background:var(--surface);border:1px solid var(--border);width:min(520px,92vw);padding:2rem;display:flex;flex-direction:column;gap:1.2rem;max-height:85vh;overflow-y:auto;}
+.tutorial-box::-webkit-scrollbar{width:2px;}
+.tutorial-box::-webkit-scrollbar-thumb{background:var(--border);}
+.tutorial-title{font-family:'Cormorant Garamond',serif;font-size:1.6rem;font-weight:300;letter-spacing:.15em;color:var(--accent);}
+.tutorial-section{display:flex;flex-direction:column;gap:.5rem;}
+.tutorial-section-head{font-size:.44rem;letter-spacing:.22em;color:var(--text-dim);text-transform:uppercase;padding-bottom:.3rem;border-bottom:1px solid var(--border);}
+.tutorial-item{display:flex;align-items:flex-start;gap:.75rem;padding:.35rem 0;}
+.tutorial-key{font-family:'DM Mono',monospace;font-size:.5rem;letter-spacing:.1em;color:var(--accent);background:var(--bg);border:1px solid var(--border);padding:.2em .5em;border-radius:1px;flex-shrink:0;white-space:nowrap;margin-top:.1em;}
+.tutorial-desc{font-size:.55rem;letter-spacing:.05em;color:var(--text-mid);line-height:1.6;}
+.tutorial-close-btn{font-family:'DM Mono',monospace;font-size:.55rem;letter-spacing:.15em;text-transform:uppercase;background:rgba(0,0,0,.001);border:1px solid var(--accent);color:var(--accent);padding:.7em 1.4em;cursor:pointer;border-radius:1px;align-self:flex-end;transition:all .2s;touch-action:manipulation;}
+.tutorial-close-btn:hover{background:var(--accent-glow);}
+
+/* sentence/page word tap styles */
+#sentence-display span{cursor:pointer;}
+#sentence-display span:hover{opacity:.8;}
+#page-display .pg-word{cursor:pointer;}
+#page-display .pg-word:hover{opacity:.85;}
+
+/* ── READER ── */
+#reader{display:none;flex-direction:column;height:100vh;position:relative;}
+.top-bar{display:flex;align-items:center;justify-content:space-between;padding:1rem 1.5rem;border-bottom:1px solid var(--border);flex-shrink:0;transition:opacity .8s;position:relative;z-index:10;}
+.top-left{display:flex;align-items:center;gap:1.5rem;}
+.top-right{display:flex;align-items:center;gap:.6rem;position:relative;}
+.top-wordmark{font-family:'Cormorant Garamond',serif;font-size:1.1rem;font-weight:300;letter-spacing:.3em;color:var(--accent);text-transform:uppercase;}
+.book-title{font-size:.58rem;letter-spacing:.1em;color:var(--text-dim);text-transform:uppercase;max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.btn-icon{background:rgba(0,0,0,.001);border:1px solid var(--border);color:var(--text-dim);font-size:.85rem;width:36px;height:36px;min-width:36px;display:flex;align-items:center;justify-content:center;border-radius:1px;transition:all .2s;touch-action:manipulation;-webkit-tap-highlight-color:transparent;cursor:pointer;-webkit-appearance:none;appearance:none;user-select:none;-webkit-user-select:none;}
+.btn-icon:hover{color:var(--accent);border-color:var(--accent);}
+.btn-icon.active{color:var(--accent);border-color:var(--accent);background:var(--accent-glow);}
+.badge{position:absolute;top:-5px;right:-5px;background:var(--accent);color:var(--bg);font-size:.38rem;width:14px;height:14px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;pointer-events:none;}
+.btn-tutorial{font-family:'DM Mono',monospace;font-size:.52rem;letter-spacing:.12em;color:var(--text-dim);text-transform:uppercase;background:rgba(0,0,0,.001);border:1px solid var(--border);padding:.5em 1em;min-height:36px;transition:all .2s;border-radius:1px;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;-webkit-appearance:none;appearance:none;user-select:none;-webkit-user-select:none;}
+.btn-tutorial:hover{color:var(--accent);border-color:var(--accent);}
+.btn-new{font-family:'DM Mono',monospace;font-size:.52rem;letter-spacing:.15em;color:var(--text-dim);text-transform:uppercase;background:rgba(0,0,0,.001);border:1px solid var(--border);padding:.5em 1em;min-height:36px;transition:all .2s;border-radius:1px;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;cursor:pointer;-webkit-appearance:none;appearance:none;user-select:none;-webkit-user-select:none;}
+.btn-new:hover{color:var(--accent);border-color:var(--accent);}
+
+/* ── ENV PANEL ── */
+.env-panel{position:absolute;top:calc(100% + .5rem);right:0;width:240px;background:var(--surface);border:1px solid var(--border);border-radius:2px;z-index:300;display:none;flex-direction:column;box-shadow:0 8px 32px rgba(0,0,0,.4);}
+.env-panel.open{display:flex;}
+.env-panel-head{padding:.7rem 1rem;border-bottom:1px solid var(--border);font-size:.46rem;letter-spacing:.22em;color:var(--text-dim);text-transform:uppercase;}
+.env-row{display:flex;align-items:center;justify-content:space-between;padding:.6rem 1rem;border-bottom:1px solid var(--border);transition:background .15s;}
+.env-row:last-child{border-bottom:none;}
+.env-row:hover{background:var(--accent-glow);}
+.env-label{font-size:.52rem;letter-spacing:.1em;color:var(--text-mid);text-transform:uppercase;}
+.env-label small{display:block;font-size:.42rem;letter-spacing:.08em;color:var(--text-dim);margin-top:.2em;text-transform:none;}
+.toggle{width:34px;height:18px;background:var(--border);border-radius:9px;position:relative;cursor:pointer;transition:background .25s;flex-shrink:0;}
+.toggle.on{background:var(--accent);}
+.toggle::after{content:'';position:absolute;width:12px;height:12px;background:var(--bg);border-radius:50%;top:3px;left:3px;transition:left .25s;}
+.toggle.on::after{left:19px;}
+.binaural-modes{display:none;background:rgba(0,0,0,.2);border-bottom:1px solid var(--border);padding:.5rem 1rem;gap:.35rem;flex-wrap:wrap;}
+.binaural-modes.show{display:flex;}
+.bm-btn{font-family:'DM Mono',monospace;font-size:.44rem;letter-spacing:.1em;text-transform:uppercase;background:rgba(0,0,0,.001);border:1px solid var(--border);color:var(--text-dim);padding:.28em .6em;border-radius:1px;transition:all .2s;touch-action:manipulation;cursor:pointer;}
+.bm-btn:hover{color:var(--accent);border-color:var(--accent);}
+.bm-btn.active{color:var(--accent);border-color:var(--accent);background:var(--accent-glow);}
+
+/* ── CHAPTER DRAWER ── */
+.drawer-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:199;display:none;backdrop-filter:blur(2px);}
+.drawer-overlay.open{display:block;}
+.chapter-drawer{position:fixed;left:0;top:0;bottom:0;width:270px;background:var(--surface);border-right:1px solid var(--border);z-index:200;display:flex;flex-direction:column;transform:translateX(-100%);transition:transform .3s ease;}
+.chapter-drawer.open{transform:translateX(0);}
+.drawer-head{padding:1.25rem 1.5rem;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;}
+.drawer-title{font-size:.55rem;letter-spacing:.2em;color:var(--text-dim);text-transform:uppercase;}
+.chapter-list{flex:1;overflow-y:auto;padding:.5rem 0;}
+.chapter-list::-webkit-scrollbar{width:2px;}
+.chapter-list::-webkit-scrollbar-thumb{background:var(--border);}
+.chapter-item{padding:.65rem 1.5rem;font-size:.58rem;letter-spacing:.08em;color:var(--text-mid);text-transform:uppercase;border-left:2px solid transparent;transition:all .2s;}
+.chapter-item:hover{color:var(--accent);border-left-color:var(--accent);background:var(--accent-glow);}
+.chapter-item.active{color:var(--accent);border-left-color:var(--accent);}
+
+/* ── READING AREA ── */
+.reading-area{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;overflow:hidden;}
+.reading-area::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 50% 40% at 50% 50%,rgba(200,184,154,.03) 0%,transparent 70%);pointer-events:none;}
+
+.context-window{width:min(620px,92vw);display:flex;flex-direction:column;align-items:center;gap:0;position:relative;z-index:2;}
+.context-line{font-family:'Cormorant Garamond',serif;font-size:clamp(.85rem,1.9vw,1.1rem);font-weight:300;letter-spacing:.03em;text-align:center;width:min(640px,92vw);line-height:1.5;min-height:1.6em;padding:0 2rem;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;transition:opacity .1s;}
+#context-prev{color:var(--word-dim);opacity:.8;-webkit-mask-image:linear-gradient(to right,transparent 0%,black 25%);mask-image:linear-gradient(to right,transparent 0%,black 25%);}
+#context-next{color:var(--context-color);opacity:.65;-webkit-mask-image:linear-gradient(to left,transparent 0%,black 25%);mask-image:linear-gradient(to left,transparent 0%,black 25%);}
+#word-display{font-family:'Cormorant Garamond',serif;font-size:clamp(2.5rem,6vw,4.5rem);font-weight:300;letter-spacing:.05em;color:var(--focus);min-width:12ch;text-align:center;line-height:1;min-height:1.2em;display:flex;align-items:center;justify-content:center;transition:opacity .05s;position:relative;cursor:pointer;}
+.word-before{color:var(--word-dim);}
+.word-focus{color:var(--accent);}
+.word-after{color:var(--word-dim);}
+
+#sentence-display{display:none;width:min(600px,88vw);font-family:'Cormorant Garamond',serif;font-size:clamp(1rem,2.2vw,1.4rem);font-weight:300;line-height:1.7;letter-spacing:.02em;text-align:center;flex-wrap:wrap;align-items:center;justify-content:center;gap:.3em;}
+/* Breathe pulse: scale current word in sentence/page/para modes */
+#sentence-display .sent-current,#page-display .pg-current{transform:scale(var(--breathe-scale,1));display:inline-block;transform-origin:center;}
+#sentence-display.active{display:flex;}
+#sentence-display .sent-done{color:var(--word-dim);}
+#sentence-display .sent-current{color:var(--accent);}
+#sentence-display .sent-upcoming{color:var(--context-color);}
+#sentence-display.para-mode{font-size:clamp(.78rem,1.6vw,1.05rem);max-height:42vh;overflow-y:auto;scrollbar-width:none;line-height:1.9;text-align:left;padding:0 .5rem;}
+#sentence-display.para-mode::-webkit-scrollbar{display:none;}
+
+/* ── PAGE MODE ── */
+#page-display{display:none;width:min(640px,88vw);overflow-y:auto;font-family:'Cormorant Garamond',serif;font-size:clamp(.9rem,1.8vw,1.15rem);font-weight:300;line-height:1.85;letter-spacing:.02em;text-align:justify;column-count:1;position:relative;}
+#page-display::-webkit-scrollbar{width:2px;}
+#page-display::-webkit-scrollbar-thumb{background:var(--border);}
+#page-display::-webkit-scrollbar-track{background:transparent;}
+#page-display.active{display:block;}
+#page-display .pg-word{transition:color .05s;}
+#page-display .pg-word.pg-done{color:var(--word-dim);}
+#page-display .pg-word.pg-current{color:var(--accent);}
+#page-display .pg-word.pg-upcoming{color:var(--context-color);}
+.page-nav{display:flex;align-items:center;gap:1.5rem;margin-top:.75rem;font-size:.48rem;letter-spacing:.15em;color:var(--text-dim);text-transform:uppercase;}
+.page-nav button{background:rgba(0,0,0,.001);border:1px solid var(--border);color:var(--text-dim);font-family:'DM Mono',monospace;font-size:.46rem;letter-spacing:.12em;text-transform:uppercase;padding:.3em .8em;border-radius:1px;transition:all .2s;touch-action:manipulation;cursor:pointer;}
+.page-nav button:hover{color:var(--accent);border-color:var(--accent);}
+
+/* ── PAGE MODE full-area layout ── */
+/* reading-area stays overflow:hidden so absolute-positioned stats/progress don't scroll */
+#reader.page-mode .reading-area{overflow:hidden;}
+/* context-window stretches to fill between stats-row (~3rem) and progress bar (6px) */
+#reader.page-mode .context-window{flex:1;width:min(680px,92vw);margin-top:3.2rem;margin-bottom:6px;overflow:hidden;align-items:stretch;gap:0;padding:0 .25rem;}
+/* page-display fills context-window height and is the manual scroll target */
+#reader.page-mode #page-display{flex:1;max-height:none;overflow-y:auto;overflow-x:hidden;width:100%;padding-right:1.4rem;}
+
+/* Stats row */
+.stats-row{position:absolute;top:1.5rem;left:50%;transform:translateX(-50%);display:flex;gap:2.5rem;z-index:2;transition:opacity .8s;}
+.stat{text-align:center;}
+.stat-value{font-size:.9rem;color:var(--text-mid);letter-spacing:.05em;}
+.stat-label{font-size:.48rem;letter-spacing:.2em;color:var(--text-dim);text-transform:uppercase;margin-top:.2em;}
+.adaptive-badge{position:absolute;top:1.5rem;right:1.5rem;font-size:.42rem;letter-spacing:.2em;color:var(--text-dim);text-transform:uppercase;opacity:0;transition:opacity .4s;z-index:2;}
+.adaptive-badge.show{opacity:1;}
+.progress-container{position:absolute;bottom:0;left:0;right:0;height:4px;background:var(--border);z-index:2;}
+.progress-bar{height:100%;background:var(--accent);transition:width .3s;opacity:.6;}
+.paused-indicator{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:.52rem;letter-spacing:.3em;color:var(--text-dim);text-transform:uppercase;opacity:0;transition:opacity .3s;pointer-events:none;z-index:2;}
+.paused-indicator.visible{opacity:1;}
+
+/* Peripheral fade — dims after 1.5s input inactivity, restores on any input */
+#reader.peripheral-active.peripheral-faded .stats-row{opacity:.06;}
+#reader.peripheral-active.peripheral-faded .top-bar{opacity:.28;}
+#reader.peripheral-active.peripheral-faded .controls{opacity:.22;}
+#reader.peripheral-active.peripheral-faded #context-prev{opacity:.05!important;}
+#reader.peripheral-active.peripheral-faded #context-next{opacity:.05!important;}
+
+/* ── CONTROLS ── */
+.controls-handle{height:18px;display:flex;align-items:center;justify-content:center;cursor:ns-resize;background:var(--surface);border-top:1px solid var(--border);touch-action:none;flex-shrink:0;user-select:none;-webkit-user-select:none;}
+.controls-handle-pill{width:32px;height:3px;background:var(--border);border-radius:2px;transition:background .2s;}
+.controls-handle:hover .controls-handle-pill,.controls-handle.dragging .controls-handle-pill{background:var(--accent);}
+.controls{padding:1.1rem 2rem 1.4rem;display:flex;flex-direction:column;gap:1.1rem;flex-shrink:0;transition:opacity .8s;overflow-y:auto;overflow-x:hidden;}
+.controls::-webkit-scrollbar{display:none;}
+.controls-row{display:flex;align-items:center;justify-content:center;gap:1.5rem;position:relative;padding-left:1.25rem;}
+/* Flag sits absolutely so Back+Play+Forward stay truly centred */
+.btn-flag{position:absolute;right:0;top:50%;transform:translateY(-50%);}
+.btn-play{width:50px;height:50px;border-radius:50%;border:1px solid var(--accent);background:rgba(0,0,0,.001);color:var(--accent);display:flex;align-items:center;justify-content:center;font-size:1rem;transition:all .2s;touch-action:manipulation;}
+.btn-play:hover,.btn-play.playing{background:var(--accent-glow);}
+.btn-skip{background:rgba(0,0,0,.001);border:1px solid var(--border);color:var(--text-dim);font-family:'DM Mono',monospace;font-size:.52rem;letter-spacing:.15em;text-transform:uppercase;padding:.45em .9em;transition:all .2s;border-radius:1px;touch-action:manipulation;cursor:pointer;}
+.btn-skip:hover{color:var(--text);border-color:var(--text-dim);}
+.btn-flag{background:rgba(0,0,0,.001);border:1px solid var(--border);color:var(--text-dim);font-family:'DM Mono',monospace;font-size:.46rem;letter-spacing:.12em;text-transform:uppercase;padding:.38em .75em;border-radius:1px;transition:all .2s;touch-action:manipulation;cursor:pointer;}
+.btn-flag:hover{color:var(--accent);border-color:var(--accent);}
+.btn-flag.flagged{color:var(--accent);border-color:var(--accent);background:var(--accent-glow);}
+.presets-row{display:flex;align-items:center;justify-content:center;gap:.45rem;}
+.preset-label{font-size:.48rem;letter-spacing:.2em;color:var(--text-dim);text-transform:uppercase;margin-right:.3rem;}
+.preset-btn{font-family:'DM Mono',monospace;font-size:.48rem;letter-spacing:.12em;text-transform:uppercase;background:rgba(0,0,0,.001);border:1px solid var(--border);color:var(--text-dim);padding:.32em .75em;border-radius:1px;transition:all .2s;touch-action:manipulation;cursor:pointer;}
+.preset-btn:hover{color:var(--accent);border-color:var(--accent);}
+.preset-btn.active{color:var(--accent);border-color:var(--accent);background:var(--accent-glow);}
+.speed-row{display:flex;align-items:center;gap:1.25rem;justify-content:center;}
+.speed-label{font-size:.52rem;letter-spacing:.18em;color:var(--text-dim);text-transform:uppercase;width:3.5rem;text-align:right;}
+.speed-value{font-size:.68rem;letter-spacing:.1em;color:var(--accent);width:4rem;}
+input[type=range]{-webkit-appearance:none;width:195px;height:1px;background:var(--border);outline:none;}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:12px;height:12px;border-radius:50%;background:var(--accent);transition:transform .15s;}
+input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.3);}
+.tools-row{display:flex;align-items:center;justify-content:center;gap:1.5rem;flex-wrap:wrap;}
+.size-row{display:flex;align-items:center;gap:.7rem;}
+.size-label{font-size:.48rem;letter-spacing:.15em;color:var(--text-dim);text-transform:uppercase;}
+.size-btn{background:rgba(0,0,0,.001);border:1px solid var(--border);color:var(--text-dim);width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-size:.8rem;transition:all .2s;border-radius:1px;touch-action:manipulation;cursor:pointer;}
+.size-btn:hover{color:var(--accent);border-color:var(--accent);}
+.speed-hint{font-size:.46rem;letter-spacing:.14em;color:var(--text-dim);text-transform:uppercase;text-align:center;margin-top:.1rem;min-height:1em;transition:opacity .25s;}
+.keyboard-hint{position:absolute;bottom:.6rem;right:1.5rem;font-size:.42rem;letter-spacing:.14em;color:var(--text-mid);text-transform:uppercase;opacity:.75;}
+
+/* ── LOADING ── */
+#loading{display:none;position:fixed;inset:0;background:var(--bg);align-items:center;justify-content:center;flex-direction:column;gap:1.5rem;z-index:100;}
+.loading-text{font-size:.62rem;letter-spacing:.25em;color:var(--text-dim);text-transform:uppercase;}
+.loading-bar{width:200px;height:1px;background:var(--border);position:relative;overflow:hidden;}
+.loading-bar::after{content:'';position:absolute;left:-50%;top:0;width:50%;height:100%;background:var(--accent);animation:loading-sweep 1s ease-in-out infinite;}
+@keyframes loading-sweep{0%{left:-50%;}100%{left:100%;}}
+
+/* ── FINISHED ── */
+#finished{display:none;position:fixed;inset:0;background:var(--bg);align-items:center;justify-content:center;flex-direction:column;gap:1.5rem;z-index:50;}
+.finished-title{font-family:'Cormorant Garamond',serif;font-size:2.5rem;font-weight:300;letter-spacing:.2em;color:var(--accent);}
+.finished-grid{display:flex;gap:3rem;}
+.finished-stat{text-align:center;}
+.finished-stat-val{font-size:1.4rem;color:var(--text-mid);letter-spacing:.05em;}
+.finished-stat-label{font-size:.48rem;letter-spacing:.2em;color:var(--text-dim);text-transform:uppercase;margin-top:.2em;}
+.finished-sub{font-size:.55rem;letter-spacing:.18em;color:var(--text-dim);text-transform:uppercase;}
+.finished-btns{display:flex;gap:1rem;margin-top:.75rem;flex-wrap:wrap;justify-content:center;}
+.btn-finished{font-family:'DM Mono',monospace;font-size:.58rem;letter-spacing:.15em;text-transform:uppercase;background:rgba(0,0,0,.001);border:1px solid var(--border);color:var(--text-mid);padding:.6em 1.4em;transition:all .2s;border-radius:1px;touch-action:manipulation;cursor:pointer;}
+.btn-finished:hover{border-color:var(--accent);color:var(--accent);}
+
+@keyframes fadeIn{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
+#landing{animation:fadeIn .8s ease forwards;}
+.word-flash{animation:wordFlash .08s ease;}
+@keyframes wordFlash{0%{opacity:.3;}100%{opacity:1;}}
+
+@media(max-width:600px){
+  /* ── LANDING ── */
+  .wordmark{letter-spacing:.15em;font-size:clamp(2.4rem,10vw,4rem);}
+  .drop-zone{padding:1.8rem 1.2rem;}
+  .recent-section{margin-top:1.5rem;}
+
+  /* ── TOP BAR ── */
+  .top-bar{padding:.6rem .85rem;gap:.5rem;}
+  .top-wordmark{font-size:.9rem;letter-spacing:.2em;}
+  .btn-tutorial{display:none;}   /* keyboard shortcut guide — desktop only */
+  .book-title{display:none;}
+  .btn-icon{width:34px;height:34px;min-width:34px;font-size:.78rem;}
+  .top-right{gap:.4rem;}
+
+  /* ── READING AREA ── */
+  .stats-row{gap:1.1rem;top:.9rem;}
+  .stat-value{font-size:.78rem;}
+  .stat-label{font-size:.4rem;letter-spacing:.15em;}
+  .adaptive-badge{display:none;}
+  /* Word mode: give the word more room on a small screen */
+  #word-display{font-size:clamp(2.6rem,9vw,3.8rem)!important;min-width:8ch;}
+  .context-line{font-size:.75rem;padding:0 .75rem;}
+  /* Sentence/para: readable size on mobile */
+  #sentence-display{font-size:clamp(1.05rem,4vw,1.3rem)!important;width:92vw!important;max-width:none!important;}
+  #sentence-display.para-mode{font-size:clamp(.88rem,3.2vw,1.05rem)!important;max-height:38vh;}
+  /* Page mode: bump up from the clamp minimum so text isn't tiny */
+  #page-display{font-size:clamp(1rem,3.5vw,1.15rem)!important;width:92vw!important;max-width:none!important;padding-right:.6rem;}
+  #reader.page-mode .context-window{margin-top:2.4rem;width:92vw!important;max-width:none!important;}
+
+  /* ── CONTROLS SHELL ── */
+  .controls{padding:.65rem .9rem .9rem;gap:.6rem;}
+  .keyboard-hint{display:none;}
+
+  /* ── PLAYBACK ROW ── */
+  .controls-row{gap:.7rem;}
+  .btn-play{width:44px;height:44px;font-size:.9rem;}
+  .btn-skip{font-size:.48rem;padding:.48em .75em;letter-spacing:.1em;}
+  .btn-flag{font-size:.42rem;padding:.4em .65em;}
+
+  /* ── SPEED PRESETS ── */
+  .presets-row{gap:.28rem;flex-wrap:wrap;}
+  .preset-label{font-size:.42rem;margin-right:.1rem;}
+  .preset-btn{font-size:.43rem;padding:.28em .55em;letter-spacing:.09em;}
+
+  /* ── SPEED SLIDER ── */
+  .speed-row{gap:.7rem;}
+  .speed-label{width:2.5rem;font-size:.44rem;}
+  input[type=range]{width:150px;}
+  .speed-value{font-size:.58rem;width:3.2rem;}
+  .speed-hint{display:none;}
+
+  /* ── TOOLS ROW (Size / Width / Mode / Pacing) ── */
+  .tools-row{gap:.5rem .8rem;justify-content:flex-start;padding:0 .1rem;}
+  .size-row{gap:.45rem;}
+  .size-label{font-size:.42rem;letter-spacing:.12em;min-width:2.6rem;}
+  .size-btn{width:27px;height:27px;font-size:.78rem;}
+
+  /* ── PANELS ── */
+  .env-panel{width:100%;right:0;left:0;border-radius:0;}
+  .stats-drawer{width:100%;}
+  .chapter-drawer{width:80vw;}
+
+  /* ── MODALS ── */
+  .modal-box{padding:1.4rem;}
+  .tutorial-box{padding:1.4rem;}
+}
+</style>
+</head>
+<body>
+
+<div id="ambient-screen"></div>
+
+<!-- ── VOCAB POPUP (global, fixed position) ── -->
+<div class="vocab-popup" id="vocab-popup">
+  <button class="vocab-close" id="vocab-close">✕</button>
+  <div class="vocab-loading" id="vocab-loading">Looking up…</div>
+  <div id="vocab-result" style="display:none">
+    <div class="vocab-word" id="vocab-word"></div>
+    <div class="vocab-phonetic" id="vocab-phonetic"></div>
+    <div class="vocab-pos" id="vocab-pos"></div>
+    <div class="vocab-def" id="vocab-def"></div>
+  </div>
+</div>
+
+<!-- ── TUTORIAL MODAL ── -->
+<div class="tutorial-overlay" id="tutorial-overlay">
+  <div class="tutorial-box">
+    <div class="tutorial-title">How to use Lucid</div>
+    <div class="tutorial-section">
+      <div class="tutorial-section-head">Reading modes</div>
+      <div class="tutorial-item"><span class="tutorial-key">Word</span><span class="tutorial-desc">One word at a time with ORP focus alignment. Best for maximum speed.</span></div>
+      <div class="tutorial-item"><span class="tutorial-key">Sentence</span><span class="tutorial-desc">Full sentence displayed, word highlighted as it plays. Good for comprehension.</span></div>
+      <div class="tutorial-item"><span class="tutorial-key">Para</span><span class="tutorial-desc">Full paragraph visible with word tracking. Great for context-heavy material.</span></div>
+      <div class="tutorial-item"><span class="tutorial-key">Page</span><span class="tutorial-desc">~220 words visible at once, current word highlighted. Natural reading feel.</span></div>
+    </div>
+    <div class="tutorial-section">
+      <div class="tutorial-section-head">Flagging &amp; export</div>
+      <div class="tutorial-item"><span class="tutorial-key">◆ Flag</span><span class="tutorial-desc">Tap the Flag button (or press <strong>F</strong>) to mark the current passage. A counter badge appears on the export button in the top bar.</span></div>
+      <div class="tutorial-item"><span class="tutorial-key">↓ Export</span><span class="tutorial-desc">Tap the export button (top-right, shown when you have flags) to download all your flagged passages as a <strong>.txt</strong> file — perfect for notes, highlights, and review.</span></div>
+      <div class="tutorial-item"><span class="tutorial-key">Tip</span><span class="tutorial-desc">You can also export your flags from the <em>Finished</em> screen at the end of a session.</span></div>
+    </div>
+    <div class="tutorial-section">
+      <div class="tutorial-section-head">Top bar buttons</div>
+      <div class="tutorial-item"><span class="tutorial-key">☰</span><span class="tutorial-desc">Chapter navigator — jump between chapters in ePub files.</span></div>
+      <div class="tutorial-item"><span class="tutorial-key">◷</span><span class="tutorial-desc">Reading intelligence — session stats, WPM history, and insights.</span></div>
+      <div class="tutorial-item"><span class="tutorial-key">◑</span><span class="tutorial-desc">Theme toggle — cycles between dark, sepia, and light.</span></div>
+      <div class="tutorial-item"><span class="tutorial-key">⚙</span><span class="tutorial-desc">Environment panel — binaural beats, ambient light, breathe, noise masking.</span></div>
+    </div>
+    <div class="tutorial-section">
+      <div class="tutorial-section-head">Look up any word</div>
+      <div class="tutorial-item"><span class="tutorial-key">Double tap</span><span class="tutorial-desc">Double-tap (or double-click) any word in <strong>any mode</strong> to look up its definition instantly.</span></div>
+    </div>
+    <div class="tutorial-section">
+      <div class="tutorial-section-head">Keyboard shortcuts</div>
+      <div class="tutorial-item"><span class="tutorial-key">Space</span><span class="tutorial-desc">Play / pause</span></div>
+      <div class="tutorial-item"><span class="tutorial-key">← →</span><span class="tutorial-desc">Step back / forward one unit</span></div>
+      <div class="tutorial-item"><span class="tutorial-key">↑ ↓</span><span class="tutorial-desc">Speed up / slow down by 25 WPM</span></div>
+      <div class="tutorial-item"><span class="tutorial-key">1 2 3 4</span><span class="tutorial-desc">Switch mode: 1 Word · 2 Sentence · 3 Para · 4 Page</span></div>
+      <div class="tutorial-item"><span class="tutorial-key">5 6 7 8</span><span class="tutorial-desc">Speed preset: 5 → 200 Absorb · 6 → 300 Read · 7 → 450 Flow · 8 → 650 Scan</span></div>
+      <div class="tutorial-item"><span class="tutorial-key">− +</span><span class="tutorial-desc">Decrease / increase font size</span></div>
+      <div class="tutorial-item"><span class="tutorial-key">F</span><span class="tutorial-desc">Flag the current passage</span></div>
+      <div class="tutorial-item"><span class="tutorial-key">V</span><span class="tutorial-desc">Look up the current word (word mode)</span></div>
+      <div class="tutorial-item"><span class="tutorial-key">C</span><span class="tutorial-desc">Open chapter navigator</span></div>
+      <div class="tutorial-item"><span class="tutorial-key">E</span><span class="tutorial-desc">Open environment panel</span></div>
+      <div class="tutorial-item"><span class="tutorial-key">S</span><span class="tutorial-desc">Open reading stats</span></div>
+      <div class="tutorial-item"><span class="tutorial-key">T</span><span class="tutorial-desc">Toggle this guide</span></div>
+    </div>
+    <div class="tutorial-section">
+      <div class="tutorial-section-head">Tips</div>
+      <div class="tutorial-item"><span class="tutorial-key">Size ±</span><span class="tutorial-desc">Adjusts font size across all reading modes simultaneously.</span></div>
+      <div class="tutorial-item"><span class="tutorial-key">Ambient</span><span class="tutorial-desc">Edge glow shifts warm (simple text) or cool (dense/complex text) automatically.</span></div>
+      <div class="tutorial-item"><span class="tutorial-key">URL</span><span class="tutorial-desc">Paste any web URL or Wikipedia link to read the article directly.</span></div>
+    </div>
+    <button class="tutorial-close-btn" id="tutorial-close-btn">Got it →</button>
+  </div>
+</div>
+
+<!-- ── RESUME MODAL ── -->
+<div class="modal-overlay" id="resume-modal">
+  <div class="modal-box">
+    <div class="modal-title" id="rm-title">—</div>
+    <div class="modal-sub" id="rm-sub">Last read · 0% complete</div>
+    <div class="modal-context" id="rm-context">…</div>
+    <div class="modal-btns">
+      <button class="modal-btn" id="rm-start-over">Start over</button>
+      <button class="modal-btn primary" id="rm-resume">Resume →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── STATS DRAWER ── -->
+<div class="drawer-overlay" id="stats-overlay"></div>
+<div class="stats-drawer" id="stats-drawer">
+  <div class="stats-drawer-head">
+    <div class="stats-drawer-title">Reading Intelligence</div>
+    <button class="btn-icon" id="btn-close-stats">✕</button>
+  </div>
+  <div class="stats-body" id="stats-body"></div>
+</div>
+
+<!-- ── LANDING ── -->
+<div id="landing">
+  <div class="wordmark">Lucid</div>
+  <div class="tagline">Read everything. Miss nothing.</div>
+  <div class="drop-zone" id="drop-zone">
+    <div class="drop-icon">◈</div>
+    <div class="drop-label">Drop your file here</div>
+    <div class="drop-sublabel">or click to browse</div>
+    <input type="file" id="file-input" accept=".epub,.pdf,.txt">
+  </div>
+  <div class="url-row">
+    <input type="text" id="url-input" placeholder="paste a url or drop text directly…">
+    <button id="url-btn">Fetch →</button>
+  </div>
+  <div class="formats">
+    <span class="format-tag">PDF</span><span class="format-tag">ePub</span>
+    <span class="format-tag">TXT</span><span class="format-tag">URL</span><span class="format-tag">Wikipedia</span><span class="format-tag">Text</span>
+  </div>
+  <div class="recent-section" id="recent-section" style="display:none">
+    <div class="recent-header">Continue reading</div>
+    <div class="recent-list" id="recent-list"></div>
+  </div>
+</div>
+
+<div id="loading"><div class="loading-text">Preparing your book</div><div class="loading-bar"></div></div>
+
+<!-- ── READER ── -->
+<div id="reader">
+  <div class="drawer-overlay" id="drawer-overlay"></div>
+  <div class="chapter-drawer" id="chapter-drawer">
+    <div class="drawer-head">
+      <div class="drawer-title">Chapters</div>
+      <button class="btn-icon" id="btn-close-drawer">✕</button>
+    </div>
+    <div class="chapter-list" id="chapter-list"></div>
+  </div>
+
+  <div class="top-bar">
+    <div class="top-left">
+      <div class="top-wordmark">Lucid</div>
+      <button class="btn-tutorial" id="btn-tutorial" title="How to use">? Guide</button>
+      <div class="book-title" id="book-title">—</div>
+    </div>
+    <div class="top-right">
+      <button class="btn-icon" id="btn-chapters" title="Chapters (C)" style="display:none">☰</button>
+      <button class="btn-icon" id="btn-export" title="Export flags" style="display:none">↓<span class="badge" id="flag-badge">0</span></button>
+      <button class="btn-icon" id="btn-stats" title="Reading Intelligence">◷</button>
+      <button class="btn-icon" id="btn-theme" title="Theme">◑</button>
+      <button class="btn-icon" id="btn-env" title="Environment (E)">⚙</button>
+      <button class="btn-new" id="btn-new">New file</button>
+
+      <!-- ENV PANEL -->
+      <div class="env-panel" id="env-panel">
+        <div class="env-panel-head">Environment</div>
+        <div class="env-row"><div class="env-label">Breathe<small>Highlighted word pulses in size</small></div><div class="toggle" id="tog-breathe"></div></div>
+        <div class="env-row"><div class="env-label">Peripheral fade<small>Dims everything but the word</small></div><div class="toggle" id="tog-peripheral"></div></div>
+        <div class="env-row"><div class="env-label">Ambient light<small>Warm/cool bleeds from edges</small></div><div class="toggle" id="tog-ambient"></div></div>
+        <div class="env-row"><div class="env-label">Binaural beats<small>Requires headphones</small></div><div class="toggle" id="tog-binaural"></div></div>
+        <div class="binaural-modes" id="binaural-modes">
+          <button class="bm-btn" data-bm="gamma">Focus · γ 40Hz</button>
+          <button class="bm-btn active" data-bm="alpha">Flow · α 10Hz</button>
+          <button class="bm-btn" data-bm="theta">Deep · θ 6Hz</button>
+        </div>
+        <div class="env-row"><div class="env-label">Brown noise<small>Deep, rumbling mask</small></div><div class="toggle" id="tog-brown"></div></div>
+        <div class="env-row"><div class="env-label">White noise<small>Flat spectrum mask</small></div><div class="toggle" id="tog-white"></div></div>
+        <div class="env-row"><div class="env-label">Transition tones<small>Soft breath on para break</small></div><div class="toggle" id="tog-tones"></div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="reading-area">
+    <div class="stats-row">
+      <div class="stat"><div class="stat-value" id="stat-wpm">—</div><div class="stat-label">WPM</div></div>
+      <div class="stat"><div class="stat-value" id="stat-progress">—</div><div class="stat-label">Progress</div></div>
+      <div class="stat"><div class="stat-value" id="stat-remaining">—</div><div class="stat-label">Remaining</div></div>
+      <div class="stat"><div class="stat-value" id="stat-page">—</div><div class="stat-label">Page</div></div>
+    </div>
+    <div class="adaptive-badge" id="adaptive-badge">adaptive ·</div>
+    <div class="context-window">
+      <div class="context-line" id="context-prev"></div>
+      <div id="word-display">—</div>
+      <div id="sentence-display"></div>
+      <div id="page-display"></div>
+      <div class="context-line" id="context-next"></div>
+    </div>
+    <div class="paused-indicator" id="paused-indicator">paused</div>
+    <div class="progress-container" id="progress-container">
+      <div class="progress-bar" id="progress-bar" style="width:0%"></div>
+    </div>
+  </div>
+
+  <div class="controls-handle" id="controls-handle"><div class="controls-handle-pill"></div></div>
+  <div class="controls">
+    <div class="controls-row">
+      <button class="btn-skip" id="btn-back">← Back</button>
+      <button class="btn-play" id="btn-play">▶</button>
+      <button class="btn-skip" id="btn-forward">Forward →</button>
+      <button class="btn-flag" id="btn-flag">◆ Flag</button>
+    </div>
+    <div class="presets-row">
+      <div class="preset-label">Speed</div>
+      <button class="preset-btn" data-wpm="200">200 · Absorb</button>
+      <button class="preset-btn active" data-wpm="300">300 · Read</button>
+      <button class="preset-btn" data-wpm="450">450 · Flow</button>
+      <button class="preset-btn" data-wpm="650">650 · Scan</button>
+    </div>
+    <div class="speed-row">
+      <div class="speed-label">Fine</div>
+      <input type="range" id="speed-slider" min="100" max="1500" value="300" step="25">
+      <div class="speed-value"><span id="speed-display">300</span> wpm</div>
+    </div>
+    <div class="speed-hint" id="speed-hint">standard reading pace · good for most material</div>
+    <div class="tools-row">
+      <div class="size-row">
+        <div class="size-label">Size</div>
+        <button class="size-btn" id="size-down">−</button>
+        <button class="size-btn" id="size-up">+</button>
+      </div>
+      <div class="size-row">
+        <div class="size-label">Width</div>
+        <button class="size-btn" id="width-down">−</button>
+        <button class="size-btn" id="width-up">+</button>
+      </div>
+      <div class="size-row">
+        <div class="size-label">Mode</div>
+        <button class="preset-btn mode-btn active" data-mode="word">Word</button>
+        <button class="preset-btn mode-btn" data-mode="sentence">Sentence</button>
+        <button class="preset-btn mode-btn" data-mode="paragraph">Para</button>
+        <button class="preset-btn mode-btn" data-mode="page">Page</button>
+        <button class="preset-btn active" id="btn-highlight">Highlight</button>
+      </div>
+      <div class="size-row">
+        <div class="size-label">Pacing</div>
+        <button class="preset-btn pacing-btn active" data-pacing="natural">Natural</button>
+        <button class="preset-btn pacing-btn" data-pacing="deep">Deep</button>
+        <button class="preset-btn pacing-btn" data-pacing="deliberate">Deliberate</button>
+      </div>
+    </div>
+  </div>
+  <div class="keyboard-hint">Space · ← → · ↑↓ speed · 1–4 mode · 5–8 preset · ±  size · F flag · C chapters · E env · V vocab · S stats · T guide</div>
+</div>
+
+<!-- ── FINISHED ── -->
+<div id="finished">
+  <div class="finished-title">Complete</div>
+  <div class="finished-grid">
+    <div class="finished-stat"><div class="finished-stat-val" id="fs-words">—</div><div class="finished-stat-label">Words</div></div>
+    <div class="finished-stat"><div class="finished-stat-val" id="fs-mins">—</div><div class="finished-stat-label">Minutes</div></div>
+    <div class="finished-stat"><div class="finished-stat-val" id="fs-avg">—</div><div class="finished-stat-label">Avg WPM</div></div>
+  </div>
+  <div class="finished-sub" id="finished-lifetime"></div>
+  <div class="finished-btns">
+    <button class="btn-finished" id="btn-restart">Read again</button>
+    <button class="btn-finished" id="btn-export-finished">Export flags</button>
+    <button class="btn-finished" id="btn-new-file">New file</button>
+  </div>
+</div>
+
+<script>
+/* ═══ ENV STATE ═══ */
+const ENV_KEY = 'lucid_env';
+let envState = { breathe:false, peripheral:true, ambient:false, binaural:false, binauralMode:'alpha', brown:false, white:false, tones:false };
+function loadEnv(){ try{ Object.assign(envState,JSON.parse(localStorage.getItem(ENV_KEY)||'{}')); }catch{} syncEnvToggles(); }
+function saveEnv(){ localStorage.setItem(ENV_KEY,JSON.stringify(envState)); }
+function syncEnvToggles(){
+  setToggle('tog-breathe',    envState.breathe);
+  setToggle('tog-peripheral', envState.peripheral);
+  setToggle('tog-ambient',    envState.ambient);
+  setToggle('tog-binaural',   envState.binaural);
+  setToggle('tog-brown',      envState.brown);
+  setToggle('tog-white',      envState.white);
+  setToggle('tog-tones',      envState.tones);
+  document.getElementById('binaural-modes').classList.toggle('show', envState.binaural);
+  document.querySelectorAll('.bm-btn').forEach(b=>b.classList.toggle('active',b.dataset.bm===envState.binauralMode));
+}
+function setToggle(id,on){ const el=document.getElementById(id); if(el) el.classList.toggle('on',on); }
+
+const envPanel=document.getElementById('env-panel');
+const btnEnv=document.getElementById('btn-env');
+btnEnv.addEventListener('click',e=>{ e.stopPropagation(); envPanel.classList.toggle('open'); });
+document.addEventListener('click',e=>{ if(!envPanel.contains(e.target)&&e.target!==btnEnv) envPanel.classList.remove('open'); });
+
+function bindToggle(id,key,onFn,offFn){
+  document.getElementById(id).addEventListener('click',()=>{
+    envState[key]=!envState[key]; setToggle(id,envState[key]); saveEnv();
+    if(envState[key]){ if(onFn)onFn(); } else { if(offFn)offFn(); }
+  });
+}
+bindToggle('tog-breathe','breathe',startBreathe,stopBreathe);
+bindToggle('tog-peripheral','peripheral',applyPeripheral,applyPeripheral);
+bindToggle('tog-ambient','ambient',startAmbientCycle,stopAmbientCycle);
+bindToggle('tog-binaural','binaural',
+  ()=>{ startBinaural(envState.binauralMode); document.getElementById('binaural-modes').classList.add('show'); },
+  ()=>{ stopBinaural(); document.getElementById('binaural-modes').classList.remove('show'); }
+);
+bindToggle('tog-brown','brown',startBrownNoise,stopBrownNoise);
+bindToggle('tog-white','white',startWhiteNoise,stopWhiteNoise);
+bindToggle('tog-tones','tones',null,null);
+
+document.querySelectorAll('.bm-btn').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    envState.binauralMode=btn.dataset.bm; saveEnv();
+    document.querySelectorAll('.bm-btn').forEach(b=>b.classList.toggle('active',b.dataset.bm===envState.binauralMode));
+    if(envState.binaural) startBinaural(envState.binauralMode);
+  });
+});
+
+/* ═══ BREATHING ═══ */
+let breatheRaf=null, breatheStart=null, currentBreatheScale=1, orpOffset=0;
+function startBreathe(){
+  if(breatheRaf)return; breatheStart=performance.now();
+  function loop(now){
+    // 10-second cosine cycle: scale goes 1.0 → 1.15 → 1.0
+    const t=(now-breatheStart)/10000;
+    const scale=1+(1-Math.cos(t*Math.PI*2))*0.075;
+    currentBreatheScale=scale;
+    // Word mode: combine with ORP translateX
+    if(readMode==='word'&&words.length)
+      wordDisplay.style.transform=`translateX(${orpOffset}px) scale(${scale})`;
+    // Sentence / para / page modes: CSS variable on .sent-current / .pg-current
+    document.documentElement.style.setProperty('--breathe-scale',scale);
+    breatheRaf=requestAnimationFrame(loop);
+  }
+  breatheRaf=requestAnimationFrame(loop);
+}
+function stopBreathe(){
+  if(breatheRaf){cancelAnimationFrame(breatheRaf);breatheRaf=null;}
+  currentBreatheScale=1;
+  document.documentElement.style.setProperty('--breathe-scale',1);
+  // Let next updateWordDisplay reset the word-display transform cleanly
+}
+
+/* ═══ PERIPHERAL FADE ═══ */
+let peripheralTimer=null;
+function resetPeripheralTimer(){
+  if(!envState.peripheral)return;
+  reader.classList.remove('peripheral-faded');
+  clearTimeout(peripheralTimer);
+  peripheralTimer=setTimeout(()=>{ if(envState.peripheral)reader.classList.add('peripheral-faded'); },1500);
+}
+function applyPeripheral(){
+  reader.classList.toggle('peripheral-active',envState.peripheral);
+  if(!envState.peripheral){ reader.classList.remove('peripheral-faded'); clearTimeout(peripheralTimer); peripheralTimer=null; }
+  else resetPeripheralTimer();
+}
+// Any input resets the inactivity fade
+['mousemove','keydown','mousedown','touchstart','wheel'].forEach(ev=>
+  document.addEventListener(ev,()=>{ if(envState.peripheral)resetPeripheralTimer(); },{passive:true})
+);
+
+/* ═══ AMBIENT COLOUR CYCLE ═══ */
+const ambientScreen=document.getElementById('ambient-screen');
+let ambientRaf=null;
+
+// Curated hue stops for the 2-minute loop: amber → rose → violet → steel blue → teal → amber
+const AMBIENT_HUES=[35,340,270,215,170,35];
+
+function ambientHueAt(t){
+  // t = 0..1 over the full cycle
+  const segs=AMBIENT_HUES.length-1;
+  const pos=t*segs;
+  const idx=Math.min(Math.floor(pos),segs-1);
+  const frac=pos-idx;
+  const h1=AMBIENT_HUES[idx], h2=AMBIENT_HUES[idx+1];
+  // Handle hue wrap (e.g. 340→270 should go backwards, not +290)
+  let dh=h2-h1;
+  if(dh>180)dh-=360;
+  if(dh<-180)dh+=360;
+  return(h1+dh*frac+360)%360;
+}
+
+function startAmbientCycle(){
+  stopAmbientCycle();
+  ambientScreen.classList.add('active');
+  const CYCLE=120000; // 2 minutes
+  function tick(){
+    const t=(Date.now()%CYCLE)/CYCLE;
+    const hue=ambientHueAt(t);
+    // Saturation/lightness vary gently for depth
+    const sat=55+Math.sin(t*Math.PI*2)*8;
+    const lit=58+Math.sin(t*Math.PI*4)*5;
+    ambientScreen.style.boxShadow=
+      `inset 0 0 200px 120px hsla(${hue},${sat}%,${lit}%,0.13),`+
+      `inset 0 0 70px 30px hsla(${hue},${sat+8}%,${lit+8}%,0.07)`;
+    ambientRaf=requestAnimationFrame(tick);
+  }
+  ambientRaf=requestAnimationFrame(tick);
+}
+
+function stopAmbientCycle(){
+  if(ambientRaf){cancelAnimationFrame(ambientRaf);ambientRaf=null;}
+  ambientScreen.style.boxShadow='';
+  ambientScreen.classList.remove('active');
+}
+
+/* ═══ AUDIO CONTEXT ═══ */
+let audioCtx=null;
+function getAudio(){
+  if(!audioCtx||audioCtx.state==='closed') audioCtx=new(window.AudioContext||window.webkitAudioContext)();
+  if(audioCtx.state==='suspended') audioCtx.resume();
+  return audioCtx;
+}
+
+/* ── BINAURAL ── */
+const BIN_PRESETS={gamma:{base:200,beat:40},alpha:{base:200,beat:10},theta:{base:200,beat:6}};
+let binL=null,binR=null;
+function startBinaural(mode){
+  stopBinaural();
+  try{
+    const ctx=getAudio(), p=BIN_PRESETS[mode]||BIN_PRESETS.alpha;
+    const merger=ctx.createChannelMerger(2), mg=ctx.createGain();
+    mg.gain.value=0.07; merger.connect(mg); mg.connect(ctx.destination);
+    binL=ctx.createOscillator(); binR=ctx.createOscillator();
+    const gL=ctx.createGain(), gR=ctx.createGain();
+    gL.gain.value=gR.gain.value=1;
+    binL.frequency.value=p.base; binR.frequency.value=p.base+p.beat;
+    binL.type=binR.type='sine';
+    binL.connect(gL); binR.connect(gR);
+    gL.connect(merger,0,0); gR.connect(merger,0,1);
+    binL.start(); binR.start();
+  }catch(e){console.warn('Binaural:',e);}
+}
+function stopBinaural(){
+  try{if(binL){binL.stop();binL=null;}}catch{}
+  try{if(binR){binR.stop();binR=null;}}catch{}
+}
+
+/* ── BROWN NOISE ── */
+let brownNode=null, brownGain=null;
+function makeBrownBuf(ctx){
+  const len=ctx.sampleRate*4, buf=ctx.createBuffer(1,len,ctx.sampleRate), d=buf.getChannelData(0); let last=0;
+  for(let i=0;i<len;i++){const w=Math.random()*2-1;d[i]=(last+0.02*w)/1.02;last=d[i];d[i]*=3.5;}
+  return buf;
+}
+function startBrownNoise(){
+  stopBrownNoise();
+  try{
+    const ctx=getAudio(); brownNode=ctx.createBufferSource(); brownNode.buffer=makeBrownBuf(ctx); brownNode.loop=true;
+    brownGain=ctx.createGain(); brownGain.gain.value=0.04;
+    brownNode.connect(brownGain); brownGain.connect(ctx.destination); brownNode.start();
+  }catch(e){console.warn('Brown:',e);}
+}
+function stopBrownNoise(){ try{if(brownNode){brownNode.stop();brownNode=null;}}catch{} brownGain=null; }
+
+/* ── WHITE NOISE ── */
+let whiteNode=null, whiteGain=null;
+function makeWhiteBuf(ctx){
+  const len=ctx.sampleRate*2, buf=ctx.createBuffer(1,len,ctx.sampleRate), d=buf.getChannelData(0);
+  for(let i=0;i<len;i++) d[i]=Math.random()*2-1;
+  return buf;
+}
+function startWhiteNoise(){
+  stopWhiteNoise();
+  try{
+    const ctx=getAudio(); whiteNode=ctx.createBufferSource(); whiteNode.buffer=makeWhiteBuf(ctx); whiteNode.loop=true;
+    whiteGain=ctx.createGain(); whiteGain.gain.value=0.022;
+    whiteNode.connect(whiteGain); whiteGain.connect(ctx.destination); whiteNode.start();
+  }catch(e){console.warn('White:',e);}
+}
+function stopWhiteNoise(){ try{if(whiteNode){whiteNode.stop();whiteNode=null;}}catch{} whiteGain=null; }
+
+/* ── TRANSITION TONE ── */
+let lastParaIdx=-1;
+function maybeTransitionTone(){
+  if(!envState.tones||!words.length)return;
+  const cp=wordToParagraph[currentIndex]||0;
+  if(cp!==lastParaIdx&&lastParaIdx!==-1) playTransitionTone();
+  lastParaIdx=cp;
+}
+function playTransitionTone(){
+  try{
+    const ctx=getAudio(), osc=ctx.createOscillator(), g=ctx.createGain();
+    osc.frequency.value=174; osc.type='sine';
+    g.gain.setValueAtTime(0,ctx.currentTime);
+    g.gain.linearRampToValueAtTime(0.038,ctx.currentTime+0.06);
+    g.gain.exponentialRampToValueAtTime(0.0001,ctx.currentTime+0.45);
+    osc.connect(g); g.connect(ctx.destination); osc.start(); osc.stop(ctx.currentTime+0.5);
+  }catch{}
+}
+
+/* ═══ VOCABULARY LOOKUP ═══ */
+const vocabPopup=document.getElementById('vocab-popup');
+let vocabOpen=false;
+document.getElementById('vocab-close').addEventListener('click',e=>{e.stopPropagation();closeVocab();});
+function closeVocab(){ vocabPopup.classList.remove('show'); vocabOpen=false; }
+
+async function lookupWord(raw){
+  const word=raw.replace(/[^a-zA-Z]/g,'').toLowerCase();
+  if(!word||word.length<2)return;
+  vocabPopup.classList.add('show'); vocabOpen=true;
+  document.getElementById('vocab-loading').style.display='';
+  document.getElementById('vocab-loading').textContent='Looking up…';
+  document.getElementById('vocab-result').style.display='none';
+  try{
+    const res=await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${word}`);
+    if(!res.ok)throw new Error('not found');
+    const data=await res.json();
+    const entry=data[0];
+    const meaning=entry.meanings?.[0];
+    const def=meaning?.definitions?.[0];
+    document.getElementById('vocab-word').textContent=entry.word||word;
+    document.getElementById('vocab-phonetic').textContent=entry.phonetic||'';
+    document.getElementById('vocab-pos').textContent=meaning?.partOfSpeech||'';
+    document.getElementById('vocab-def').textContent=def?.definition||'No definition found.';
+    document.getElementById('vocab-loading').style.display='none';
+    document.getElementById('vocab-result').style.display='';
+  }catch{
+    document.getElementById('vocab-loading').textContent='No definition found.';
+  }
+}
+
+/* ═══ FLAGGED CHUNKS ═══ */
+let flaggedChunks=[];
+
+function flagCurrent(){
+  let text='';
+  if(readMode==='page'){
+    const pgStart=getPageStart(currentIndex);
+    const pgEnd=getPageEnd(currentIndex);
+    text=words.slice(pgStart,pgEnd).join(' ');
+  } else if(readMode==='sentence'){
+    const si=wordToSentence[currentIndex]||0;
+    text=sentences[si]||'';
+  } else if(readMode==='paragraph'){
+    const pi=wordToParagraph[currentIndex]||0;
+    text=paragraphs[pi]||'';
+  } else {
+    const si=wordToSentence[currentIndex]||0;
+    text=sentences[si]||words.slice(Math.max(0,currentIndex-5),currentIndex+6).join(' ');
+  }
+  if(!text)return;
+  const pct=words.length?Math.round(currentIndex/words.length*100):0;
+  flaggedChunks.push({text,pct,index:currentIndex});
+  updateFlagBadge();
+  const btn=document.getElementById('btn-flag');
+  btn.classList.add('flagged');
+  setTimeout(()=>btn.classList.remove('flagged'),800);
+}
+
+function updateFlagBadge(){
+  const n=flaggedChunks.length;
+  const badge=document.getElementById('flag-badge');
+  const exportBtn=document.getElementById('btn-export');
+  badge.textContent=n;
+  exportBtn.style.display=n>0?'flex':'none';
+}
+
+function exportFlags(){
+  if(!flaggedChunks.length)return;
+  const title=document.getElementById('book-title').textContent||'Lucid Export';
+  const lines=[`LUCID — ${title}`,`Exported: ${new Date().toLocaleDateString()}`,'','━'.repeat(50),''];
+  flaggedChunks.forEach((c,i)=>{
+    lines.push(`[${i+1}] at ${c.pct}%`,'',c.text,'','━'.repeat(50),'');
+  });
+  const blob=new Blob([lines.join('\n')],{type:'text/plain'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download=`lucid-${title.toLowerCase().replace(/\s+/g,'-').slice(0,30)}-notes.txt`;
+  a.click(); URL.revokeObjectURL(a.href);
+}
+
+document.getElementById('btn-flag').addEventListener('click',flagCurrent);
+document.getElementById('btn-export').addEventListener('click',exportFlags);
+document.getElementById('btn-export-finished').addEventListener('click',exportFlags);
+
+/* ═══ READING INTELLIGENCE ═══ */
+const SESSIONS_KEY='lucid_sessions2';
+let sessionStartTime=null, sessionStartIndex=0;
+
+function getSessions(){ try{return JSON.parse(localStorage.getItem(SESSIONS_KEY)||'[]');}catch{return[];} }
+
+function recordSession(wordsRead, durationMs, avgWpm){
+  if(wordsRead<20||durationMs<10000)return;
+  const sessions=getSessions();
+  sessions.push({ ts:Date.now(), wordsRead, durationMs, avgWpm, hour:new Date().getHours() });
+  if(sessions.length>200)sessions.splice(0,sessions.length-200);
+  localStorage.setItem(SESSIONS_KEY,JSON.stringify(sessions));
+}
+
+function openStats(){
+  buildStatsPanel();
+  document.getElementById('stats-overlay').classList.add('open');
+  document.getElementById('stats-drawer').classList.add('open');
+}
+function closeStats(){
+  document.getElementById('stats-overlay').classList.remove('open');
+  document.getElementById('stats-drawer').classList.remove('open');
+}
+
+document.getElementById('btn-stats').addEventListener('click',openStats);
+document.getElementById('btn-close-stats').addEventListener('click',closeStats);
+document.getElementById('stats-overlay').addEventListener('click',closeStats);
+
+function buildStatsPanel(){
+  const body=document.getElementById('stats-body');
+  const sessions=getSessions();
+  const lt=getLifetime();
+  const now=Date.now();
+  const todaySess=sessions.filter(s=>now-s.ts<86400000);
+  const weekSess=sessions.filter(s=>now-s.ts<604800000);
+  const todayWords=todaySess.reduce((a,s)=>a+s.wordsRead,0);
+  const weekWords=weekSess.reduce((a,s)=>a+s.wordsRead,0);
+  const todayMins=Math.round(todaySess.reduce((a,s)=>a+s.durationMs,0)/60000);
+  const allWpms=sessions.map(s=>s.avgWpm).filter(w=>w>50&&w<1500);
+  const bestWpm=allWpms.length?Math.max(...allWpms):0;
+  const avgWpm=allWpms.length?Math.round(allWpms.reduce((a,b)=>a+b,0)/allWpms.length):0;
+  const hourCounts=Array(24).fill(0);
+  sessions.forEach(s=>{ if(s.hour!=null) hourCounts[s.hour]+=s.wordsRead; });
+  const bestHour=hourCounts.indexOf(Math.max(...hourCounts));
+  const bestPeriod=bestHour<12?'Morning':bestHour<17?'Afternoon':'Evening';
+  const booksEq=Math.round(lt.words/80000*10)/10;
+  const avgSessionMins=sessions.length?Math.round(sessions.reduce((a,s)=>a+s.durationMs,0)/sessions.length/60000):0;
+
+  body.innerHTML=`
+  <div class="stats-section">
+    <div class="stats-section-head">Today</div>
+    <div class="stats-grid">
+      <div class="stats-card"><div class="stats-card-val">${todayWords.toLocaleString()}</div><div class="stats-card-lbl">Words read</div></div>
+      <div class="stats-card"><div class="stats-card-val">${todayMins}m</div><div class="stats-card-lbl">Time reading</div></div>
+    </div>
+  </div>
+  <div class="stats-section">
+    <div class="stats-section-head">This Week</div>
+    <div class="stats-grid">
+      <div class="stats-card"><div class="stats-card-val">${weekWords.toLocaleString()}</div><div class="stats-card-lbl">Words read</div></div>
+      <div class="stats-card"><div class="stats-card-val">${weekSess.length}</div><div class="stats-card-lbl">Sessions</div></div>
+    </div>
+  </div>
+  <div class="stats-section">
+    <div class="stats-section-head">All Time</div>
+    <div class="stats-grid">
+      <div class="stats-card"><div class="stats-card-val">${(lt.words||0).toLocaleString()}</div><div class="stats-card-lbl">Total words</div></div>
+      <div class="stats-card"><div class="stats-card-val">${lt.sessions||0}</div><div class="stats-card-lbl">Sessions</div></div>
+      <div class="stats-card"><div class="stats-card-val">${bestWpm||'—'}</div><div class="stats-card-lbl">Best WPM</div></div>
+      <div class="stats-card"><div class="stats-card-val">${avgWpm||'—'}</div><div class="stats-card-lbl">Avg WPM</div></div>
+      <div class="stats-card"><div class="stats-card-val">${avgSessionMins||'—'}m</div><div class="stats-card-lbl">Avg session</div></div>
+      <div class="stats-card"><div class="stats-card-val">${booksEq}</div><div class="stats-card-lbl">Books (~80k)</div></div>
+    </div>
+  </div>
+  <div class="stats-section">
+    <div class="stats-section-head">Insight</div>
+    <div class="stats-insight">${sessions.length<3?'Read at least 3 sessions to unlock insights.':
+      `You read best in the <strong>${bestPeriod}</strong>. Your speed ranges from ${Math.min(...allWpms)||0}–${bestWpm} WPM. Average session is ${avgSessionMins} minutes.`}
+    </div>
+  </div>`;
+}
+
+/* ═══ CORE STATE ═══ */
+let words=[],sentences=[],wordToSentence=[],chapters=[],paragraphs=[],wordToParagraph=[];
+let pageBreaks=[]; // real page start-word indices from epub/pdf; empty = word-chunk fallback
+let currentIndex=0,isPlaying=false,timer=null,wpm=300;
+let startTime=null,currentBookKey=null;
+let readMode='word', showHighlight=true;
+let themes=['dark','light','sepia'],themeIndex=0;
+const WORDS_PER_PAGE=220;
+
+/* ── DOM ── */
+const landing=document.getElementById('landing');
+const loading=document.getElementById('loading');
+const reader=document.getElementById('reader');
+const finished=document.getElementById('finished');
+const dropZone=document.getElementById('drop-zone');
+const fileInput=document.getElementById('file-input');
+const wordDisplay=document.getElementById('word-display');
+const btnPlay=document.getElementById('btn-play');
+const btnBack=document.getElementById('btn-back');
+const btnForward=document.getElementById('btn-forward');
+const speedSlider=document.getElementById('speed-slider');
+const speedDisplay=document.getElementById('speed-display');
+const progressBar=document.getElementById('progress-bar');
+const progressContainer=document.getElementById('progress-container');
+const bookTitle=document.getElementById('book-title');
+const pausedIndicator=document.getElementById('paused-indicator');
+const statWpm=document.getElementById('stat-wpm');
+const statProgress=document.getElementById('stat-progress');
+const statRemaining=document.getElementById('stat-remaining');
+const statPage=document.getElementById('stat-page');
+const ctxPrev=document.getElementById('context-prev');
+const ctxNext=document.getElementById('context-next');
+const adaptiveBadge=document.getElementById('adaptive-badge');
+const chapterDrawer=document.getElementById('chapter-drawer');
+const chapterListEl=document.getElementById('chapter-list');
+const drawerOverlay=document.getElementById('drawer-overlay');
+const btnChapters=document.getElementById('btn-chapters');
+const urlInput=document.getElementById('url-input');
+const pageDisplay=document.getElementById('page-display');
+
+/* ── THEME ── */
+function loadTheme(){ themeIndex=parseInt(localStorage.getItem('lucid_theme')||'0'); applyTheme(); }
+function applyTheme(){
+  document.body.removeAttribute('data-theme');
+  if(themeIndex!==0) document.body.setAttribute('data-theme',themes[themeIndex]);
+  localStorage.setItem('lucid_theme',themeIndex);
+}
+document.getElementById('btn-theme').addEventListener('click',()=>{ themeIndex=(themeIndex+1)%3; applyTheme(); });
+loadTheme();
+
+/* ── PERSISTENCE ── */
+function getHistory(){ try{return JSON.parse(localStorage.getItem('lucid_history')||'[]');}catch{return[];} }
+function saveHistory(e){ let h=getHistory().filter(x=>x.key!==e.key); h.unshift(e); h=h.slice(0,8); localStorage.setItem('lucid_history',JSON.stringify(h)); }
+function saveProgress(){
+  if(!currentBookKey)return;
+  const h=getHistory(), e=h.find(x=>x.key===currentBookKey);
+  if(e){ e.progress=currentIndex; e.timestamp=Date.now(); localStorage.setItem('lucid_history',JSON.stringify(h)); }
+}
+function getLifetime(){ try{return JSON.parse(localStorage.getItem('lucid_lifetime')||'{"words":0,"sessions":0}');}catch{return{words:0,sessions:0};} }
+function addLifetime(count){ const s=getLifetime(); s.words+=count; s.sessions++; localStorage.setItem('lucid_lifetime',JSON.stringify(s)); }
+function cacheText(key,text,chaps,pBreaks){
+  try{
+    localStorage.setItem('lucid_body_'+key,text);
+    if(chaps&&chaps.length) localStorage.setItem('lucid_chaps_'+key,JSON.stringify(chaps));
+    if(pBreaks&&pBreaks.length) localStorage.setItem('lucid_pages_'+key,JSON.stringify(pBreaks));
+  }catch{}
+}
+function getCachedBody(key){ try{return localStorage.getItem('lucid_body_'+key);}catch{return null;} }
+function getCachedChaps(key){ try{return JSON.parse(localStorage.getItem('lucid_chaps_'+key)||'null');}catch{return null;} }
+function getCachedPageBreaks(key){ try{return JSON.parse(localStorage.getItem('lucid_pages_'+key)||'null');}catch{return null;} }
+function evictCachedText(key){ try{localStorage.removeItem('lucid_body_'+key);localStorage.removeItem('lucid_chaps_'+key);localStorage.removeItem('lucid_pages_'+key);}catch{} }
+
+let pendingResumeKey=null;
+
+function deleteRecent(key){
+  let h=getHistory().filter(x=>x.key!==key);
+  localStorage.setItem('lucid_history',JSON.stringify(h));
+  evictCachedText(key);
+  if(pendingResumeKey===key) pendingResumeKey=null;
+  renderRecent();
+}
+
+/* ═══ INTELLIGENT RESUME MODAL ═══ */
+function showResumeModal(entry, body, chaps, pBreaks){
+  const pct=entry.wordCount>0?Math.round(entry.progress/entry.wordCount*100):0;
+  const daysAgo=Math.round((Date.now()-entry.timestamp)/86400000);
+  const timeStr=daysAgo===0?'Today':daysAgo===1?'Yesterday':`${daysAgo} days ago`;
+  document.getElementById('rm-title').textContent=entry.title;
+  document.getElementById('rm-sub').textContent=`${timeStr} · ${pct}% complete · ${entry.wordCount.toLocaleString()} words`;
+
+  // Build context: 30 words before resume point
+  const allWords=body.trim().split(/\s+/).filter(w=>w.length>0);
+  const start=Math.max(0,entry.progress-30);
+  const ctx=allWords.slice(start,entry.progress).join(' ')+'…';
+  document.getElementById('rm-context').textContent=ctx||'Beginning of book.';
+
+  document.getElementById('resume-modal').classList.add('open');
+
+  document.getElementById('rm-resume').onclick=()=>{
+    document.getElementById('resume-modal').classList.remove('open');
+    startWithBody(entry.key, body, chaps, pBreaks, entry.title, entry.progress);
+  };
+  document.getElementById('rm-start-over').onclick=()=>{
+    document.getElementById('resume-modal').classList.remove('open');
+    startWithBody(entry.key, body, chaps, pBreaks, entry.title, 0);
+  };
+}
+
+function startWithBody(key, body, chaps, pBreaks, title, startIndex){
+  currentBookKey=key; pendingResumeKey=null;
+  bookTitle.textContent=title; chapters=chaps||[]; pageBreaks=pBreaks||[];
+  showLoading();
+  initReader(body, title, startIndex);
+}
+
+function renderRecent(){
+  const h=getHistory();
+  const sec=document.getElementById('recent-section');
+  const list=document.getElementById('recent-list');
+  if(!h.length){ sec.style.display='none'; return; }
+  sec.style.display=''; list.innerHTML='';
+  const hint=document.createElement('div');
+  hint.className='resume-hint'; hint.id='resume-hint';
+  hint.textContent='↑ open that file again to resume';
+  h.forEach(e=>{
+    const pct=e.wordCount>0?Math.round(e.progress/e.wordCount*100):0;
+    const cached=!!getCachedBody(e.key);
+    const div=document.createElement('div');
+    div.className='recent-item';
+    div.innerHTML=`<div class="recent-name">${e.title}</div>`+
+      `<div class="recent-meta">${pct}% · ${e.wordCount.toLocaleString()}w${cached?' · ↺':''}</div>`+
+      `<button class="recent-del" title="Remove">✕</button>`;
+    div.querySelector('.recent-del').addEventListener('click',ev=>{ ev.stopPropagation(); deleteRecent(e.key); });
+    div.addEventListener('click',()=>{
+      const body=getCachedBody(e.key);
+      if(body){
+        const chaps=getCachedChaps(e.key)||[];
+        const pBreaks=getCachedPageBreaks(e.key)||[];
+        if(e.progress>50){ showResumeModal(e,body,chaps,pBreaks); }
+        else { startWithBody(e.key,body,chaps,pBreaks,e.title,0); }
+      } else {
+        pendingResumeKey=e.key;
+        list.querySelectorAll('.recent-item').forEach(el=>el.classList.remove('pending'));
+        div.classList.add('pending'); hint.classList.add('show'); fileInput.click();
+      }
+    });
+    list.appendChild(div);
+  });
+  list.appendChild(hint);
+}
+
+/* ── FILE PROCESSING ── */
+dropZone.addEventListener('click',()=>fileInput.click());
+dropZone.addEventListener('dragover',e=>{ e.preventDefault(); dropZone.classList.add('drag-over'); });
+dropZone.addEventListener('dragleave',()=>dropZone.classList.remove('drag-over'));
+dropZone.addEventListener('drop',e=>{ e.preventDefault(); dropZone.classList.remove('drag-over'); const f=e.dataTransfer.files[0]; if(f)processFile(f); });
+fileInput.addEventListener('change',e=>{ if(e.target.files[0])processFile(e.target.files[0]); });
+
+async function processFile(file){
+  showLoading();
+  const ext=file.name.split('.').pop().toLowerCase();
+  const title=file.name.replace(/\.[^/.]+$/,'').toUpperCase();
+  bookTitle.textContent=title;
+  currentBookKey=pendingResumeKey||(title+'_'+file.size);
+  pendingResumeKey=null;
+  try{
+    let text='',chaps=[],pBreaks=[];
+    if(ext==='txt'){ text=await readTxt(file); }
+    else if(ext==='pdf'){ const r=await readPdf(file); text=r.text; pBreaks=r.pageBreaks; }
+    else if(ext==='epub'){ const r=await readEpub(file); text=r.text; chaps=r.chapters; pBreaks=r.pageBreaks; }
+    else { text=await readTxt(file); }
+    chapters=chaps; pageBreaks=pBreaks;
+    // Check if there's saved progress
+    const h=getHistory();
+    const saved=h.find(x=>x.key===currentBookKey);
+    if(saved&&saved.progress>50){
+      hideLoading();
+      showResumeModal(saved,text,chaps,pBreaks);
+    } else {
+      await initReader(text,title,0);
+    }
+  }catch(err){
+    hideLoading();
+    const msg=err.message||'';
+    if(msg==='PDF_ENCRYPTED'){
+      alert('This PDF is password-protected or encrypted.\n\nOpen it in Preview or Adobe, then export as plain PDF or copy the text directly.');
+    } else if(msg==='PDF_EMPTY'){
+      alert('This PDF appears to have no selectable text (it may be a scanned image). Try exporting as .txt first.');
+    } else if(ext==='pdf'){
+      alert('Could not read this PDF. Try opening it and exporting as plain text first.');
+    } else {
+      alert('Could not read this file. Make sure it\'s a valid .epub, .pdf, or .txt.');
+    }
+    console.error(err);
+  }
+}
+
+async function initReader(text, title, startIdx){
+  buildIndices(text);
+  if(!words.length) throw new Error('No text');
+  currentIndex=startIdx||0;
+  lastParaIdx=wordToParagraph[currentIndex]||0;
+  saveHistory({key:currentBookKey,title:bookTitle.textContent,wordCount:words.length,progress:currentIndex,timestamp:Date.now()});
+  cacheText(currentBookKey,text,chapters,pageBreaks);
+  startTime=null;
+  sessionStartTime=Date.now();
+  sessionStartIndex=currentIndex;
+  flaggedChunks=[];
+  updateFlagBadge();
+  renderChapters();
+  showReader();
+  updateWordDisplay();
+  updateStats();
+  renderRecent();
+  if(envState.breathe) startBreathe();
+  if(envState.peripheral) applyPeripheral();
+  if(envState.ambient) startAmbientCycle();
+}
+
+/* ── URL FETCH ── */
+document.getElementById('url-btn').addEventListener('click',fetchUrl);
+urlInput.addEventListener('keydown',e=>{ if(e.key==='Enter')fetchUrl(); });
+
+async function fetchWikipedia(url){
+  const titleMatch=url.match(/\/wiki\/([^#?&]+)/);
+  if(!titleMatch) throw new Error('Bad Wikipedia URL');
+  const title=decodeURIComponent(titleMatch[1]);
+  const apiUrl=`https://en.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(title)}&prop=extracts&explaintext=true&format=json&origin=*`;
+  const resp=await fetch(apiUrl);
+  const data=await resp.json();
+  const pages=data.query.pages;
+  const page=pages[Object.keys(pages)[0]];
+  if(!page||page.missing!==undefined) throw new Error('Article not found');
+  const text=page.extract||'';
+  const displayTitle=page.title||title;
+  return{text,title:displayTitle.toUpperCase()};
+}
+
+async function fetchUrl(){
+  const raw=urlInput.value.trim(); if(!raw)return;
+  if(!raw.startsWith('http')){
+    bookTitle.textContent='PASTED TEXT'; currentBookKey='paste_'+Date.now();
+    urlInput.value=''; chapters=[]; showLoading(); await initReader(raw,'PASTED TEXT',0); return;
+  }
+  showLoading();
+  try{
+    let text='', title='';
+    const isWiki=/wikipedia\.org\/wiki\//i.test(raw);
+    if(isWiki){
+      const r=await fetchWikipedia(raw);
+      text=r.text; title=r.title;
+    } else {
+      const proxy=`https://api.allorigins.win/get?url=${encodeURIComponent(raw)}`;
+      const resp=await fetch(proxy); const data=await resp.json();
+      const doc=new DOMParser().parseFromString(data.contents,'text/html');
+      ['script','style','nav','header','footer','aside','form'].forEach(tag=>doc.querySelectorAll(tag).forEach(el=>el.remove()));
+      const el=doc.querySelector('article')||doc.querySelector('main')||doc.body;
+      text=(el.innerText||el.textContent||'').replace(/\s+/g,' ').trim();
+      title=(doc.title||raw).toUpperCase().slice(0,60);
+    }
+    if(!text||text.length<50) throw new Error('No readable text found');
+    bookTitle.textContent=title; currentBookKey='url_'+raw.slice(0,80);
+    urlInput.value=''; chapters=[]; await initReader(text,title,0);
+  }catch(err){
+    hideLoading();
+    alert('Could not fetch that URL.\n\n'+( err.message||'Try pasting the text directly into the field.'));
+  }
+}
+
+/* ── TEXT READERS ── */
+function readTxt(file){ return new Promise((res,rej)=>{ const r=new FileReader(); r.onload=e=>res(e.target.result); r.onerror=rej; r.readAsText(file); }); }
+
+/* ── PDF HEADER/FOOTER REMOVAL HELPERS ──
+   Strategy: build a document-level vocabulary of header strings rather than
+   making per-page frequency decisions. Headers self-select at the top of a
+   global ranked distribution of positional-zone fingerprints. Real prose
+   first-lines are essentially unique (count=1); only headers repeat. */
+
+// Group individual PDF text items into visual lines by Y coordinate
+function pdfGroupLines(items){
+  const tol=3; // px — items within 3px of each other are on the same line
+  const map=new Map();
+  for(const it of items){
+    if(!it.str) continue;
+    const roundedY=Math.round(it.transform[5]/tol)*tol;
+    if(!map.has(roundedY)) map.set(roundedY,{y:it.transform[5],texts:[],rawYs:new Set()});
+    const ln=map.get(roundedY);
+    ln.texts.push(it.str);
+    ln.rawYs.add(Math.round(it.transform[5]));
+  }
+  return [...map.values()]
+    .map(ln=>({y:ln.y, text:ln.texts.join(' ').trim(), rawYs:[...ln.rawYs]}))
+    .filter(ln=>ln.text.length>0);
+}
+
+// Fingerprint a line: lowercase, strip all digits, strip punctuation, collapse whitespace.
+// This means "The Alchemy of Finance 47" and "48 The Alchemy of Finance" produce
+// the same fingerprint regardless of page-number position.
+function pdfFingerprint(s){
+  return s.trim().toLowerCase()
+    .replace(/\d+/g,'')         // strip all digits (page numbers mutate per page)
+    .replace(/[^\w\s]/g,' ')    // strip punctuation
+    .replace(/\s+/g,' ')
+    .trim();
+}
+
+// True if a string is purely a standalone number/roman numeral (possibly with "of N")
+function isPdfPageNum(s){
+  return /^\s*(?:page\s+)?[ivxlcdmIVXLCDM\d]+\s*(?:of\s+[ivxlcdmIVXLCDM\d]+|\/\s*[ivxlcdmIVXLCDM\d]+)?\s*$/i.test(s.trim());
+}
+
+async function readPdf(file){
+  const ab=await file.arrayBuffer();
+  let pdf;
+  try{
+    pdf=await pdfjsLib.getDocument({data:ab}).promise;
+  }catch(e){
+    const msg=(e.message||'').toLowerCase();
+    if(msg.includes('password')||msg.includes('encrypt')) throw new Error('PDF_ENCRYPTED');
+    throw e;
+  }
+
+  // ── Phase 1: PDF metadata → ground-truth header fingerprints ──
+  // The book title and author name in metadata ARE the headers verbatim.
+  // Extract them first; any positional-zone line whose fingerprint EXACTLY matches
+  // a metadata fingerprint is confirmed without needing frequency evidence.
+  // NOTE: We do NOT extract sub-tokens (no "alchemy", "orwell", etc. as standalone
+  // entries) — that causes false positives on real prose containing those words.
+  const metaFps=new Set();
+  try{
+    const meta=await pdf.getMetadata();
+    const info=meta.info||{};
+    for(const k of ['Title','Author','Subject','Creator']){
+      if(info[k]&&typeof info[k]==='string'&&info[k].trim().length>1){
+        const fp=pdfFingerprint(info[k]);
+        if(fp.length>1) metaFps.add(fp);
+      }
+    }
+  }catch{}
+
+  // ── Phase 2: Collect all page data; group items into visual lines ──
+  const pageData=[];
+  for(let i=1;i<=pdf.numPages;i++){
+    const page=await pdf.getPage(i);
+    const vp=page.getViewport({scale:1});
+    const c=await page.getTextContent();
+    const lines=pdfGroupLines(c.items);
+    pageData.push({height:vp.height, lines, items:c.items});
+  }
+
+  // ── Phase 3: Build global ranked frequency map of zone-line fingerprints ──
+  // "Zone" = top 3 lines and bottom 3 lines of each page (by Y coordinate).
+  // In PDF space Y=0 is the bottom of the page, so high Y values = top of page.
+  // We collect fingerprints only from these positional zones across all pages.
+  const fpFreq=new Map();
+  for(const {lines} of pageData){
+    const sorted=[...lines].sort((a,b)=>b.y-a.y); // descending → top first
+    const n=sorted.length;
+    if(!n) continue;
+    const zoneLines=[
+      ...sorted.slice(0,Math.min(3,n)),        // top 3 lines
+      ...sorted.slice(Math.max(0,n-3))          // bottom 3 lines
+    ];
+    const seenOnPage=new Set();
+    for(const ln of zoneLines){
+      if(isPdfPageNum(ln.text)) continue; // standalone page numbers handled separately
+      const fp=pdfFingerprint(ln.text);
+      if(!fp||fp.length<2||seenOnPage.has(fp)) continue;
+      seenOnPage.add(fp);
+      fpFreq.set(fp,(fpFreq.get(fp)||0)+1);
+    }
+  }
+
+  // ── Phase 4: Confirm header vocabulary from ranked distribution ──
+  // The key insight: real prose first-lines are essentially unique (count=1 globally).
+  // Header strings — book title, author, chapter title — repeat across pages and cluster
+  // at the top of the frequency distribution. We don't need a percentage threshold;
+  // count >= 3 in a positional zone confirms a header string.
+  // We use 3 (not 2) because count=2 is plausibly a prose sentence that happened
+  // to land at a page edge twice. Short chapters (5 pages, header on 3) still caught.
+  const headerVocab=new Set(metaFps);
+
+  // Guard: prose-like fingerprints (5+ tokens with multiple function words) need
+  // much stronger evidence — protects real sentences like "Down with Big Brother".
+  function looksLikeProse(fp){
+    const tokens=fp.split(/\s+/).filter(Boolean);
+    if(tokens.length<5) return false;
+    const fn=new Set(['the','and','his','her','was','had','of','in','to','that','he','she',
+      'it','they','have','been','with','not','but','from','as','at','by','an','you','we',
+      'our','my','your','their','which','who','this','these','those','a']);
+    let c=0; for(const t of tokens){ if(fn.has(t)) c++; } return c>=2;
+  }
+
+  for(const [fp,count] of fpFreq){
+    const tokens=fp.split(/\s+/).filter(Boolean);
+    if(tokens.length>12) continue;
+    if(looksLikeProse(fp)){ if(count>=5) headerVocab.add(fp); }
+    else { if(count>=3) headerVocab.add(fp); }
+  }
+
+  // ── Phase 5: Strip header/footer lines and rebuild clean text ──
+  // EXACT fingerprint match only — no substring matching.
+  // Exact match is sufficient: "10 GEORGE ORWELL" → fingerprint → "george orwell"
+  // which exactly equals the metadata fingerprint.
+  function isHeaderLine(ln){
+    if(isPdfPageNum(ln.text)) return true;
+    const fp=pdfFingerprint(ln.text);
+    if(!fp) return true; // empty after digit-stripping = was purely a number
+    return headerVocab.has(fp);
+  }
+
+  let txt='';
+  const pdfPageBreaks=[];
+  let runningWords=0;
+
+  for(const {lines,items} of pageData){
+    const sorted=[...lines].sort((a,b)=>b.y-a.y);
+    const n=sorted.length;
+    const zoneLines=n?[
+      ...sorted.slice(0,Math.min(3,n)),
+      ...sorted.slice(Math.max(0,n-3))
+    ]:[];
+
+    // Collect raw Y values of lines confirmed as headers/footers
+    const excludedRawYs=new Set();
+    for(const ln of zoneLines){
+      if(isHeaderLine(ln)) ln.rawYs.forEach(y=>excludedRawYs.add(y));
+    }
+
+    // Keep only items whose Y is not in the excluded set
+    const kept=items.filter(it=>!excludedRawYs.has(Math.round(it.transform[5])));
+
+    const pageTxt=kept.map(x=>x.str).join(' ')+' ';
+    const pageWordCount=tokenize(pageTxt).length;
+    if(pageWordCount>0){
+      pdfPageBreaks.push(runningWords);
+      runningWords+=pageWordCount;
+    }
+    txt+=pageTxt;
+  }
+
+  if(!txt.trim()) throw new Error('PDF_EMPTY');
+  return{text:txt,pageBreaks:pdfPageBreaks};
+}
+async function readEpub(file){
+  const ab=await file.arrayBuffer();
+  const JSZip=await loadJSZip();
+  const zip=await JSZip.loadAsync(ab);
+  let text=''; const chaptersList=[];
+  let opfPath='OEBPS/content.opf';
+  try{ const c=await zip.files['META-INF/container.xml'].async('text'); const m=c.match(/full-path="([^"]+\.opf)"/); if(m)opfPath=m[1]; }catch{}
+  let orderedFiles=[];
+  try{
+    const opf=await zip.files[opfPath].async('text');
+    const doc=new DOMParser().parseFromString(opf,'text/xml');
+    const base=opfPath.includes('/')?opfPath.substring(0,opfPath.lastIndexOf('/')+1):'';
+    const manifest={};
+    doc.querySelectorAll('manifest item').forEach(el=>{ manifest[el.getAttribute('id')]=base+el.getAttribute('href'); });
+    const spine=[...doc.querySelectorAll('spine itemref')].map(el=>el.getAttribute('idref'));
+    orderedFiles=spine.map(id=>manifest[id]).filter(Boolean);
+    try{
+      const ncxId=doc.querySelector('spine')?.getAttribute('toc');
+      const ncxPath=ncxId?manifest[ncxId]:null;
+      if(ncxPath&&zip.files[ncxPath]){
+        const ncx=await zip.files[ncxPath].async('text');
+        const ncxDoc=new DOMParser().parseFromString(ncx,'text/xml');
+        ncxDoc.querySelectorAll('navPoint').forEach(np=>{
+          const label=np.querySelector('navLabel text')?.textContent?.trim()||'';
+          const src=np.querySelector('content')?.getAttribute('src')?.split('#')[0]||'';
+          if(label&&src) chaptersList.push({title:label,file:base+src});
+        });
+      }
+    }catch{}
+  }catch{ orderedFiles=Object.keys(zip.files).filter(n=>/\.(html|xhtml|htm)$/i.test(n)).sort(); }
+
+  const epubPageBreaks=[];
+  let runningWords=0;
+  for(const name of orderedFiles){
+    if(!zip.files[name])continue;
+    const content=await zip.files[name].async('text');
+    const stripped=stripHtml(content);
+    const ch=chaptersList.find(c=>name.endsWith(c.file.split('/').pop())||c.file===name);
+    const fileWordCount=stripped.trim()?tokenize(stripped).length:0;
+    if(ch) ch.startWordIndex=runningWords;
+    if(fileWordCount>0){
+      epubPageBreaks.push(runningWords);
+      runningWords+=fileWordCount;
+    }
+    text+=stripped+' ';
+  }
+  const chaptersOut=chaptersList.filter(c=>c.startWordIndex!==undefined).map(c=>({title:c.title,startIndex:c.startWordIndex}));
+  return{text,chapters:chaptersOut,pageBreaks:epubPageBreaks};
+}
+function stripHtml(s){
+  return s.replace(/<style[\s\S]*?<\/style>/gi,'').replace(/<script[\s\S]*?<\/script>/gi,'')
+    // Strip heading tag content entirely — epub chapter/book titles appear in <h1>-<h6>
+    // and would otherwise bleed into the word stream on every chapter boundary page.
+    // Chapter titles are captured separately from the ncx file, so this is safe.
+    .replace(/<h[1-6][^>]*>[\s\S]*?<\/h[1-6]>/gi,'\n\n')
+    .replace(/<[^>]+>/g,' ').replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>')
+    .replace(/&nbsp;/g,' ').replace(/&quot;/g,'"').replace(/&#39;/g,"'").replace(/\s+/g,' ').trim();
+}
+async function loadJSZip(){
+  return new Promise((res,rej)=>{
+    if(window.JSZip){res(window.JSZip);return;}
+    const s=document.createElement('script');
+    s.src='https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js';
+    s.onload=()=>res(window.JSZip); s.onerror=rej; document.head.appendChild(s);
+  });
+}
+
+/* ── TOKENIZE ── */
+function tokenize(text){ return text.replace(/\s+/g,' ').trim().split(' ').filter(w=>w.length>0); }
+
+/* ── UNIFIED INDEX BUILDER ──
+   Builds words, sentences, paragraphs and their word-index maps in a single walk.
+   Guarantees every entry in words[] has a valid wordToSentence/wordToParagraph mapping
+   (no drift from filtered units) so all four reading modes show the same current word. */
+function buildIndices(text){
+  const rawParas=text.split(/\n\s*\n/)
+    .map(p=>p.replace(/\s+/g,' ').trim())
+    .filter(p=>p.length>0);
+
+  words=[]; paragraphs=[]; sentences=[];
+  wordToSentence=[]; wordToParagraph=[];
+
+  const sentEndRe=/[.!?]["')\]]*$/;
+  let pi=0, si=0;
+
+  for(const para of rawParas){
+    const paraTokens=tokenize(para);
+    if(!paraTokens.length) continue;
+
+    paragraphs.push(para);
+    let sentStartWord=words.length;
+
+    for(const tok of paraTokens){
+      words.push(tok);
+      wordToParagraph.push(pi);
+      wordToSentence.push(si);
+      if(sentEndRe.test(tok)){
+        sentences.push(words.slice(sentStartWord).join(' '));
+        si++;
+        sentStartWord=words.length;
+      }
+    }
+    // Close out any unterminated sentence at end of paragraph
+    if(sentStartWord<words.length){
+      sentences.push(words.slice(sentStartWord).join(' '));
+      si++;
+    }
+    pi++;
+  }
+
+  // If the source had no paragraph breaks (e.g. dense PDFs), group sentences into synthetic paragraphs
+  if(paragraphs.length<3&&sentences.length>=3){
+    const G=4;
+    paragraphs=[];
+    const newWordToPara=new Array(words.length);
+    let newPi=0, wIdx=0;
+    for(let i=0;i<sentences.length;i+=G){
+      const lastSent=Math.min(i+G-1,sentences.length-1);
+      paragraphs.push(sentences.slice(i,lastSent+1).join(' '));
+      while(wIdx<words.length&&wordToSentence[wIdx]<=lastSent){
+        newWordToPara[wIdx]=newPi; wIdx++;
+      }
+      newPi++;
+    }
+    while(wIdx<words.length){ newWordToPara[wIdx]=newPi-1; wIdx++; }
+    wordToParagraph=newWordToPara;
+  }
+}
+
+/* ── CHAPTERS ── */
+function renderChapters(){
+  if(chapters.length<2){btnChapters.style.display='none';return;}
+  btnChapters.style.display='flex'; chapterListEl.innerHTML='';
+  chapters.forEach(ch=>{
+    const div=document.createElement('div');
+    div.className='chapter-item'; div.textContent=ch.title;
+    div.addEventListener('click',()=>{ currentIndex=ch.startIndex; clearTimeout(timer); updateWordDisplay(); updateStats(); closeDrawer(); if(isPlaying)scheduleNext(); });
+    chapterListEl.appendChild(div);
+  });
+}
+function openDrawer(){ chapterDrawer.classList.add('open'); drawerOverlay.classList.add('open'); const items=chapterListEl.querySelectorAll('.chapter-item'); const cur=[...chapters].reverse().find(c=>c.startIndex<=currentIndex); const idx=chapters.indexOf(cur); items.forEach((el,i)=>el.classList.toggle('active',i===idx)); }
+function closeDrawer(){ chapterDrawer.classList.remove('open'); drawerOverlay.classList.remove('open'); }
+btnChapters.addEventListener('click',openDrawer);
+document.getElementById('btn-close-drawer').addEventListener('click',closeDrawer);
+drawerOverlay.addEventListener('click',closeDrawer);
+
+/* ── PAGE MODE RENDERER ── */
+let currentPageStart=-1;
+
+// Real-page helpers — use pageBreaks[] if available, else fall back to 220-word chunks
+function getPageIndex(wordIdx){
+  if(!pageBreaks.length) return Math.floor(wordIdx/WORDS_PER_PAGE);
+  let lo=0,hi=pageBreaks.length-1;
+  while(lo<hi){ const mid=(lo+hi+1)>>1; if(pageBreaks[mid]<=wordIdx)lo=mid; else hi=mid-1; }
+  return lo;
+}
+function getPageStart(wordIdx){
+  if(!pageBreaks.length) return Math.floor(wordIdx/WORDS_PER_PAGE)*WORDS_PER_PAGE;
+  return pageBreaks[getPageIndex(wordIdx)];
+}
+function getPageEnd(wordIdx){
+  if(!pageBreaks.length){
+    const s=Math.floor(wordIdx/WORDS_PER_PAGE)*WORDS_PER_PAGE;
+    return Math.min(words.length,s+WORDS_PER_PAGE);
+  }
+  const pi=getPageIndex(wordIdx);
+  return pi+1<pageBreaks.length?pageBreaks[pi+1]:words.length;
+}
+function getTotalPages(){
+  return pageBreaks.length||Math.ceil(words.length/WORDS_PER_PAGE);
+}
+
+function renderPageMode(){
+  const sentEl=document.getElementById('sentence-display');
+  wordDisplay.style.display='none';
+  sentEl.classList.remove('active');
+  ctxPrev.style.visibility='hidden'; ctxNext.style.visibility='hidden';
+  pageDisplay.classList.add('active');
+
+  const pgStart=getPageStart(currentIndex);
+  currentPageStart=pgStart;
+  const pgEnd=getPageEnd(currentIndex);
+  const pageWords=words.slice(pgStart,pgEnd);
+
+  pageDisplay.innerHTML='';
+  pageWords.forEach((w,i)=>{
+    const span=document.createElement('span');
+    const absI=pgStart+i;
+    let cls='pg-word ';
+    if(!showHighlight){ cls+='pg-upcoming'; }
+    else { cls+=(absI<currentIndex?'pg-done':absI===currentIndex?'pg-current':'pg-upcoming'); }
+    span.className=cls;
+    span.textContent=w;
+    span.dataset.abs=absI;
+    pageDisplay.appendChild(span);
+    pageDisplay.appendChild(document.createTextNode(' '));
+  });
+  // Scroll page-display back to top when a new page loads
+  pageDisplay.scrollTop=0;
+}
+
+function updatePageHighlight(){
+  const pgStart=getPageStart(currentIndex);
+  if(pgStart!==currentPageStart){ renderPageMode(); return; }
+  pageDisplay.querySelectorAll('.pg-word').forEach(span=>{
+    const abs=parseInt(span.dataset.abs);
+    let cls='pg-word ';
+    if(!showHighlight){ cls+='pg-upcoming'; }
+    else { cls+=(abs<currentIndex?'pg-done':abs===currentIndex?'pg-current':'pg-upcoming'); }
+    span.className=cls;
+  });
+  // No auto-scroll — user scrolls manually in page mode
+}
+
+/* ── WORD DISPLAY ── */
+function escHtml(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function getORP(word){ const len=word.replace(/[^a-zA-Z]/g,'').length; if(len<=1)return 0; if(len<=5)return 1; if(len<=9)return 2; if(len<=13)return 3; return 4; }
+
+function updateWordDisplay(){
+  if(!words.length)return;
+  const sentEl=document.getElementById('sentence-display');
+
+  if(readMode==='page'){
+    updatePageHighlight();
+  } else if(readMode==='sentence'||readMode==='paragraph'){
+    wordDisplay.style.display='none'; pageDisplay.classList.remove('active');
+    ctxPrev.style.visibility='hidden'; ctxNext.style.visibility='hidden';
+    sentEl.classList.add('active'); sentEl.classList.toggle('para-mode',readMode==='paragraph');
+    const isSent=readMode==='sentence';
+    const unitIdx=isSent?(wordToSentence[currentIndex]||0):(wordToParagraph[currentIndex]||0);
+    const content=isSent?(sentences[unitIdx]||''):(paragraphs[unitIdx]||'');
+    const map=isSent?wordToSentence:wordToParagraph;
+    const cWords=tokenize(content);
+    let unitStart=currentIndex;
+    while(unitStart>0&&map[unitStart-1]===unitIdx) unitStart--;
+    const posInUnit=currentIndex-unitStart;
+    const cacheKey=(isSent?'s':'p')+unitIdx;
+    if(sentEl._lastKey!==cacheKey){
+      sentEl.innerHTML='';
+      cWords.forEach((w,i)=>{ const s=document.createElement('span'); s.textContent=w; s.dataset.i=i; sentEl.appendChild(s); });
+      sentEl._lastKey=cacheKey;
+    }
+    sentEl.querySelectorAll('span').forEach(span=>{
+      const i=parseInt(span.dataset.i);
+      if(!showHighlight){ span.className='sent-upcoming'; }
+      else { span.className=i<posInUnit?'sent-done':i===posInUnit?'sent-current':'sent-upcoming'; }
+    });
+    if(readMode==='paragraph'&&showHighlight){ const cur=sentEl.querySelector('.sent-current'); if(cur)cur.scrollIntoView({block:'nearest'}); }
+  } else {
+    wordDisplay.style.display=''; pageDisplay.classList.remove('active');
+    ctxPrev.style.visibility=''; ctxNext.style.visibility='';
+    sentEl.classList.remove('active'); sentEl.classList.remove('para-mode'); sentEl._lastKey=undefined;
+    const word=words[currentIndex]||'';
+    const orp=getORP(word);
+    wordDisplay.innerHTML=`<span class="word-before">${escHtml(word.slice(0,orp))}</span><span class="word-focus">${escHtml(word.slice(orp,orp+1))}</span><span class="word-after">${escHtml(word.slice(orp+1))}</span>`;
+    const fEl=wordDisplay.querySelector('.word-focus');
+    if(fEl){ void wordDisplay.offsetWidth; const cR=wordDisplay.getBoundingClientRect(),fR=fEl.getBoundingClientRect(); orpOffset=(cR.left+cR.width/2)-(fR.left+fR.width/2); wordDisplay.style.transform=`translateX(${orpOffset}px) scale(${currentBreatheScale})`; }
+    wordDisplay.classList.remove('word-flash'); void wordDisplay.offsetWidth; wordDisplay.classList.add('word-flash');
+    if(vocabOpen) closeVocab();
+  }
+
+  updateContext(); updateStats(); saveProgress(); maybeTransitionTone();
+}
+
+/* ── VOCAB CLICK — all modes ── */
+wordDisplay.addEventListener('dblclick',e=>{
+  e.stopPropagation();
+  const word=words[currentIndex]||'';
+  lookupWord(word);
+});
+// Sentence / paragraph mode: dblclick on any span
+document.getElementById('sentence-display').addEventListener('dblclick',e=>{
+  if(e.target.tagName!=='SPAN')return;
+  e.stopPropagation();
+  lookupWord(e.target.textContent||'');
+});
+// Page mode: dblclick on any pg-word span
+pageDisplay.addEventListener('dblclick',e=>{
+  if(!e.target.classList.contains('pg-word'))return;
+  e.stopPropagation();
+  lookupWord(e.target.textContent||'');
+});
+document.addEventListener('click',e=>{ if(vocabOpen&&!vocabPopup.contains(e.target))closeVocab(); });
+
+/* ── CONTEXT ── */
+function updateContext(){
+  if(!words.length||readMode==='page'||readMode==='sentence'||readMode==='paragraph'){ ctxPrev.textContent=''; ctxNext.textContent=''; return; }
+  const N=10;
+  ctxPrev.textContent=words.slice(Math.max(0,currentIndex-N),currentIndex).join(' ');
+  ctxNext.textContent=words.slice(currentIndex+1,Math.min(words.length,currentIndex+1+N)).join(' ');
+}
+
+/* ── STATS ── */
+function updateStats(){
+  const pct=words.length?Math.round(currentIndex/words.length*100):0;
+  const left=words.length-currentIndex;
+  const mins=Math.round(left/wpm);
+  statWpm.textContent=wpm;
+  statProgress.textContent=pct+'%';
+  statRemaining.textContent=mins<1?'<1m':mins+'m';
+  if(readMode==='page'){
+    statPage.textContent=`${getPageIndex(currentIndex)+1}/${getTotalPages()}`;
+  } else {
+    const pp=300, total=Math.ceil(words.length/pp), cur=Math.floor(currentIndex/pp)+1;
+    statPage.textContent=words.length?`${cur}/${total}`:'—';
+  }
+  progressBar.style.width=pct+'%';
+}
+
+/* ── ADAPTIVE DELAY ── */
+function estimateSyllables(w){
+  if(!w)return 1;
+  w=w.toLowerCase().replace(/(?:[^laeiouy]es|ed|[^laeiouy]e)$/,'').replace(/^y/,'');
+  const m=w.match(/[aeiouy]{1,2}/g); return m?m.length:1;
+}
+const PACING={
+  natural:    {lpc:.07,lcap:.85,s2:.10,s3:.25,s4:.40,s5:.55,ep:2.2,mp:1.6,dp:1.4,cap:2.0},
+  deep:       {lpc:.13,lcap:1.30,s2:.20,s3:.45,s4:.70,s5:.95,ep:2.6,mp:1.9,dp:1.65,cap:2.8},
+  deliberate: {lpc:.20,lcap:1.80,s2:.32,s3:.68,s4:1.05,s5:1.40,ep:3.2,mp:2.3,dp:2.0,cap:3.8},
+};
+let pacingMode='natural';
+function getDelay(word){
+  const base=(60/wpm)*1000, clean=word.replace(/[^a-zA-Z]/g,''), len=clean.length, syl=estimateSyllables(clean), p=PACING[pacingMode];
+  if(/[.!?]$/.test(word)){ adaptiveBadge.classList.remove('show'); return base*p.ep; }
+  if(/[,;:]$/.test(word)){ adaptiveBadge.classList.remove('show'); return base*p.mp; }
+  if(/[—–]/.test(word)){ adaptiveBadge.classList.remove('show'); return base*p.dp; }
+  const lb=len>4?Math.min((len-4)*p.lpc,p.lcap):0;
+  const sb=syl>=5?p.s5:syl===4?p.s4:syl===3?p.s3:syl===2?p.s2:0;
+  const clamped=Math.min(1+lb+sb,p.cap);
+  adaptiveBadge.classList.toggle('show',clamped>1.08);
+  return base*clamped;
+}
+
+/* ── PLAYBACK ── */
+function play(){
+  if(currentIndex>=words.length)return;
+  isPlaying=true; btnPlay.textContent='⏸'; btnPlay.classList.add('playing');
+  pausedIndicator.classList.remove('visible');
+  if(!startTime)startTime=Date.now();
+  clearTimeout(timer);
+  scheduleNext();
+}
+function pause(){
+  isPlaying=false; btnPlay.textContent='▶'; btnPlay.classList.remove('playing');
+  pausedIndicator.classList.add('visible');
+  clearTimeout(timer); timer=null; saveProgress();
+}
+function togglePlay(){ if(isPlaying)pause(); else play(); }
+function scheduleNext(){
+  clearTimeout(timer);
+  if(!isPlaying||!words.length)return;
+  const word=words[currentIndex]||'';
+  const delay=getDelay(word);
+  timer=setTimeout(()=>{
+    if(!isPlaying)return;
+    currentIndex+=1;
+    if(currentIndex>=words.length){ showFinished(); return; }
+    try{ updateWordDisplay(); }catch(e){ console.warn('display err',e); }
+    if(isPlaying)scheduleNext();
+  },delay);
+}
+
+/* ── SPEED ── */
+document.querySelectorAll('.preset-btn[data-wpm]').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    if(isPlaying)pause();
+    setWpm(parseInt(btn.dataset.wpm));
+    document.querySelectorAll('.preset-btn[data-wpm]').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+  });
+});
+speedSlider.addEventListener('input',()=>{
+  const v=parseInt(speedSlider.value); setWpm(v);
+  document.querySelectorAll('.preset-btn[data-wpm]').forEach(b=>b.classList.toggle('active',parseInt(b.dataset.wpm)===v));
+});
+const SPEED_HINTS=[[150,'very slow · maximum retention'],[250,'relaxed · dense material'],[350,'standard reading pace'],[500,'above average · trained readers'],[700,'fast · familiar material'],[1001,'very fast · skimming only'],[1251,'extreme · visual parsing only']];
+function getSpeedHint(v){ for(const[t,l]of SPEED_HINTS)if(v<t)return l; return'very fast · skimming only'; }
+function setWpm(v){
+  wpm=v; speedSlider.value=v; speedDisplay.textContent=v;
+  const h=document.getElementById('speed-hint'); if(h)h.textContent=getSpeedHint(v);
+  updateStats(); if(isPlaying){ clearTimeout(timer); scheduleNext(); }
+}
+
+/* ── STEP ── */
+function stepBack(){
+  clearTimeout(timer);
+  if(readMode==='page'){
+    currentIndex=Math.max(0,getPageStart(currentIndex)-WORDS_PER_PAGE);
+  } else if(readMode==='sentence'){
+    const si=wordToSentence[currentIndex]||0;
+    let start=currentIndex; while(start>0&&wordToSentence[start-1]===si)start--;
+    if(currentIndex>start){ currentIndex=start; }
+    else if(si>0){ let idx=start-1; while(idx>0&&wordToSentence[idx-1]===si-1)idx--; currentIndex=idx; }
+  } else if(readMode==='paragraph'){
+    const pi=wordToParagraph[currentIndex]||0;
+    let start=currentIndex; while(start>0&&wordToParagraph[start-1]===pi)start--;
+    if(currentIndex>start){ currentIndex=start; }
+    else if(pi>0){ let idx=start-1; while(idx>0&&wordToParagraph[idx-1]===pi-1)idx--; currentIndex=idx; }
+  } else { currentIndex=Math.max(0,currentIndex-1); }
+  updateWordDisplay(); if(isPlaying)scheduleNext();
+}
+function stepForward(){
+  clearTimeout(timer);
+  if(readMode==='page'){
+    currentIndex=Math.min(words.length-1,getPageEnd(currentIndex));
+  } else if(readMode==='sentence'){
+    const si=wordToSentence[currentIndex]||0; let idx=currentIndex;
+    while(idx<words.length&&wordToSentence[idx]===si)idx++;
+    currentIndex=Math.min(words.length-1,idx);
+  } else if(readMode==='paragraph'){
+    const pi=wordToParagraph[currentIndex]||0; let idx=currentIndex;
+    while(idx<words.length&&wordToParagraph[idx]===pi)idx++;
+    currentIndex=Math.min(words.length-1,idx);
+  } else { currentIndex=Math.min(words.length-1,currentIndex+1); }
+  updateWordDisplay(); if(isPlaying)scheduleNext();
+}
+
+/* ── BUTTONS ── */
+btnPlay.addEventListener('click',togglePlay);
+btnBack.addEventListener('click',stepBack);
+btnForward.addEventListener('click',stepForward);
+let currentFontScale=1.0;
+function applyFontScale(){
+  wordDisplay.style.fontSize=(4.5*currentFontScale)+'rem';
+  document.getElementById('sentence-display').style.fontSize=(1.2*currentFontScale)+'rem';
+  pageDisplay.style.fontSize=(1.0*currentFontScale)+'rem';
+}
+document.getElementById('size-up').addEventListener('click',()=>{ currentFontScale=Math.min(2.0,+(currentFontScale+0.12).toFixed(2)); applyFontScale(); });
+document.getElementById('size-down').addEventListener('click',()=>{ currentFontScale=Math.max(0.45,+(currentFontScale-0.12).toFixed(2)); applyFontScale(); });
+
+/* ── WIDTH SCALE ── */
+let currentWidthScale=1.0;
+function applyWidthScale(){
+  const vw=window.innerWidth;
+  const cap=vw*0.96;
+  const cw  =Math.min(620*currentWidthScale, cap);
+  const cl  =Math.min(640*currentWidthScale, cap);
+  const sent=Math.min(600*currentWidthScale, cap);
+  const pg  =Math.min(640*currentWidthScale, cap);
+  // context-window drives everything in page mode (page-display is width:100% of it)
+  const cwin=document.querySelector('.context-window');
+  cwin.style.width=cw+'px'; cwin.style.maxWidth='none';
+  document.querySelectorAll('.context-line').forEach(el=>{ el.style.width=cl+'px'; el.style.maxWidth='none'; });
+  document.getElementById('sentence-display').style.width=sent+'px';
+  document.getElementById('sentence-display').style.maxWidth='none';
+  // in page mode page-display fills context-window via flex; in other modes set explicit width
+  if(readMode==='page'){
+    pageDisplay.style.width=''; pageDisplay.style.maxWidth='';
+  } else {
+    pageDisplay.style.width=pg+'px'; pageDisplay.style.maxWidth='none';
+  }
+}
+document.getElementById('width-up').addEventListener('click',()=>{ currentWidthScale=Math.min(2.8,+(currentWidthScale+0.15).toFixed(2)); applyWidthScale(); });
+document.getElementById('width-down').addEventListener('click',()=>{ currentWidthScale=Math.max(0.5,+(currentWidthScale-0.15).toFixed(2)); applyWidthScale(); });
+
+/* ── TUTORIAL ── */
+document.getElementById('btn-tutorial').addEventListener('click',()=>{
+  document.getElementById('tutorial-overlay').classList.add('open');
+});
+document.getElementById('tutorial-close-btn').addEventListener('click',()=>{
+  document.getElementById('tutorial-overlay').classList.remove('open');
+  localStorage.setItem('lucid_tutorial_seen','1');
+});
+document.getElementById('tutorial-overlay').addEventListener('click',e=>{
+  if(e.target===document.getElementById('tutorial-overlay')){ document.getElementById('tutorial-overlay').classList.remove('open'); localStorage.setItem('lucid_tutorial_seen','1'); }
+});
+
+/* ── MODES ── */
+document.querySelectorAll('.mode-btn').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    if(isPlaying)pause();
+    readMode=btn.dataset.mode;
+    document.querySelectorAll('.mode-btn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    const sentEl=document.getElementById('sentence-display');
+    if(sentEl){ sentEl._lastKey=undefined; sentEl.classList.remove('para-mode'); }
+    reader.classList.toggle('page-mode', readMode==='page');
+    if(readMode==='word'){ sentEl.classList.remove('active'); wordDisplay.style.display=''; pageDisplay.classList.remove('active'); }
+    if(readMode==='page'){ sentEl.classList.remove('active'); wordDisplay.style.display='none'; currentPageStart=-1; }
+    applyWidthScale();
+    updateWordDisplay();
+  });
+});
+document.getElementById('btn-highlight').addEventListener('click',()=>{
+  showHighlight=!showHighlight;
+  document.getElementById('btn-highlight').classList.toggle('active',showHighlight);
+  updateWordDisplay();
+});
+document.querySelectorAll('.pacing-btn').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    if(isPlaying)pause();
+    pacingMode=btn.dataset.pacing;
+    document.querySelectorAll('.pacing-btn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+  });
+});
+
+/* ── KEYBOARD ── */
+document.addEventListener('keydown',e=>{
+  if(e.target===urlInput||e.target.tagName==='INPUT') return;
+  if(e.code==='Space'){ e.preventDefault(); togglePlay(); }
+  if(e.code==='ArrowLeft'){ e.preventDefault(); stepBack(); }
+  if(e.code==='ArrowRight'){ e.preventDefault(); stepForward(); }
+  if(e.code==='ArrowUp'){ e.preventDefault(); setWpm(Math.min(1500,parseInt(speedSlider.value)+25)); }
+  if(e.code==='ArrowDown'){ e.preventDefault(); setWpm(Math.max(100,parseInt(speedSlider.value)-25)); }
+  if(e.code==='KeyC'&&chapters.length>=2) openDrawer();
+  if(e.code==='KeyE') envPanel.classList.toggle('open');
+  if(e.code==='KeyS') openStats();
+  if(e.code==='KeyV'){ const word=words[currentIndex]||''; if(word)lookupWord(word); }
+  if(e.code==='KeyT') document.getElementById('tutorial-overlay').classList.toggle('open');
+  if(e.code==='KeyF') flagCurrent();
+  // Mode shortcuts: 1=word, 2=sentence, 3=para, 4=page
+  if(e.code==='Digit1'){ e.preventDefault(); activateMode('word'); }
+  if(e.code==='Digit2'){ e.preventDefault(); activateMode('sentence'); }
+  if(e.code==='Digit3'){ e.preventDefault(); activateMode('paragraph'); }
+  if(e.code==='Digit4'){ e.preventDefault(); activateMode('page'); }
+  // Speed preset shortcuts: 5=200 Absorb, 6=300 Read, 7=450 Flow, 8=650 Scan
+  if(e.code==='Digit5'){ e.preventDefault(); activateSpeedPreset(200); }
+  if(e.code==='Digit6'){ e.preventDefault(); activateSpeedPreset(300); }
+  if(e.code==='Digit7'){ e.preventDefault(); activateSpeedPreset(450); }
+  if(e.code==='Digit8'){ e.preventDefault(); activateSpeedPreset(650); }
+  // Font size: - to decrease, + or = to increase
+  if(e.code==='Minus'){ e.preventDefault(); currentFontScale=Math.max(0.45,+(currentFontScale-0.12).toFixed(2)); applyFontScale(); }
+  if(e.code==='Equal'){ e.preventDefault(); currentFontScale=Math.min(2.0,+(currentFontScale+0.12).toFixed(2)); applyFontScale(); }
+});
+
+function activateMode(mode){
+  if(isPlaying)pause();
+  readMode=mode;
+  document.querySelectorAll('.mode-btn').forEach(b=>b.classList.toggle('active',b.dataset.mode===mode));
+  const sentEl=document.getElementById('sentence-display');
+  if(sentEl){ sentEl._lastKey=undefined; sentEl.classList.remove('para-mode'); }
+  reader.classList.toggle('page-mode', readMode==='page');
+  if(readMode==='word'){ sentEl.classList.remove('active'); wordDisplay.style.display=''; pageDisplay.classList.remove('active'); }
+  if(readMode==='page'){ sentEl.classList.remove('active'); wordDisplay.style.display='none'; currentPageStart=-1; }
+  applyWidthScale();
+  updateWordDisplay();
+}
+
+function activateSpeedPreset(v){
+  if(isPlaying)pause();
+  setWpm(v);
+  document.querySelectorAll('.preset-btn[data-wpm]').forEach(b=>b.classList.toggle('active',parseInt(b.dataset.wpm)===v));
+}
+
+/* ── PROGRESS SCRUB ── */
+let isDragging=false;
+function seek(pct){
+  if(!words.length)return;
+  currentIndex=Math.max(0,Math.min(words.length-1,Math.floor(pct*words.length)));
+  updateWordDisplay(); if(isPlaying){ clearTimeout(timer); scheduleNext(); }
+}
+progressContainer.addEventListener('click',e=>{ const r=progressContainer.getBoundingClientRect(); seek((e.clientX-r.left)/r.width); });
+progressContainer.addEventListener('mousedown',e=>{ isDragging=true; const r=progressContainer.getBoundingClientRect(); seek((e.clientX-r.left)/r.width); });
+document.addEventListener('mousemove',e=>{ if(!isDragging)return; const r=progressContainer.getBoundingClientRect(); seek(Math.max(0,Math.min(1,(e.clientX-r.left)/r.width))); });
+document.addEventListener('mouseup',()=>{ isDragging=false; });
+progressContainer.addEventListener('touchstart',e=>{ const r=progressContainer.getBoundingClientRect(); seek((e.touches[0].clientX-r.left)/r.width); },{passive:true});
+progressContainer.addEventListener('touchmove',e=>{ const r=progressContainer.getBoundingClientRect(); seek(Math.max(0,Math.min(1,(e.touches[0].clientX-r.left)/r.width))); },{passive:true});
+
+/* ── CONTROLS HANDLE DRAG ── */
+(()=>{
+  const handle=document.getElementById('controls-handle');
+  const controlsEl=document.querySelector('.controls');
+  let draggingHandle=false, startY=0, startH=0;
+  const MIN_H=64, MAX_H=()=>Math.round(window.innerHeight*0.62);
+
+  function startDrag(y){
+    draggingHandle=true;
+    startY=y;
+    startH=controlsEl.offsetHeight;
+    handle.classList.add('dragging');
+    // lock height so we can resize it
+    controlsEl.style.height=startH+'px';
+    controlsEl.style.transition='none';
+  }
+  function moveDrag(y){
+    if(!draggingHandle)return;
+    const dy=startY-y; // drag up = positive = taller controls
+    const newH=Math.max(MIN_H,Math.min(MAX_H(),startH+dy));
+    controlsEl.style.height=newH+'px';
+  }
+  function endDrag(){
+    if(!draggingHandle)return;
+    draggingHandle=false;
+    handle.classList.remove('dragging');
+    controlsEl.style.transition='';
+  }
+
+  handle.addEventListener('mousedown',e=>{ e.preventDefault(); startDrag(e.clientY); });
+  document.addEventListener('mousemove',e=>{ moveDrag(e.clientY); });
+  document.addEventListener('mouseup',endDrag);
+
+  handle.addEventListener('touchstart',e=>{ e.preventDefault(); startDrag(e.touches[0].clientY); },{passive:false});
+  document.addEventListener('touchmove',e=>{ if(draggingHandle){ e.preventDefault(); moveDrag(e.touches[0].clientY); } },{passive:false});
+  document.addEventListener('touchend',endDrag);
+})();
+
+/* ── FLOW STATES ── */
+function showLoading(){ landing.style.display='none'; loading.style.display='flex'; }
+function hideLoading(){ loading.style.display='none'; landing.style.display='flex'; renderRecent(); }
+function showReader(){ loading.style.display='none'; reader.style.display='flex'; finished.style.display='none'; }
+
+function showFinished(){
+  isPlaying=false; clearTimeout(timer);
+  // Record session
+  if(sessionStartTime){
+    const dur=Date.now()-sessionStartTime;
+    const read=currentIndex-sessionStartIndex;
+    const avg=dur>0?Math.round(read/(dur/60000)):wpm;
+    recordSession(read,dur,avg);
+  }
+  stopBinaural(); stopBrownNoise(); stopWhiteNoise(); stopBreathe(); stopAmbientCycle();
+  const elapsed=startTime?Math.round((Date.now()-startTime)/1000/60):0;
+  const avg=elapsed>0?Math.round(words.length/elapsed):wpm;
+  document.getElementById('fs-words').textContent=words.length.toLocaleString();
+  document.getElementById('fs-mins').textContent=elapsed;
+  document.getElementById('fs-avg').textContent=avg;
+  addLifetime(words.length);
+  const ls=getLifetime();
+  document.getElementById('finished-lifetime').textContent=`${ls.words.toLocaleString()} words across ${ls.sessions} sessions`;
+  reader.style.display='none'; finished.style.display='flex';
+}
+
+function resetToLanding(){
+  pause();
+  if(sessionStartTime){ const dur=Date.now()-sessionStartTime; const read=currentIndex-sessionStartIndex; if(read>20)recordSession(read,dur,wpm); sessionStartTime=null; }
+  stopBinaural(); stopBrownNoise(); stopWhiteNoise(); stopBreathe(); stopAmbientCycle();
+  words=[]; sentences=[]; wordToSentence=[]; paragraphs=[]; wordToParagraph=[]; chapters=[]; pageBreaks=[];
+  currentIndex=0; startTime=null; currentBookKey=null; lastParaIdx=-1; flaggedChunks=[]; updateFlagBadge(); currentPageStart=-1;
+  readMode='word'; showHighlight=true;
+  reader.classList.remove('page-mode');
+  document.querySelectorAll('.mode-btn').forEach(b=>b.classList.toggle('active',b.dataset.mode==='word'));
+  document.getElementById('btn-highlight').classList.add('active');
+  const sentEl=document.getElementById('sentence-display');
+  if(sentEl){ sentEl.classList.remove('active','para-mode'); sentEl.innerHTML=''; sentEl._lastKey=undefined; }
+  pageDisplay.classList.remove('active'); pageDisplay.innerHTML='';
+  reader.style.display='none'; finished.style.display='none'; landing.style.display='flex';
+  fileInput.value=''; wordDisplay.innerHTML='—'; wordDisplay.style.transform='';
+  progressBar.style.width='0%'; ctxPrev.textContent=''; ctxNext.textContent='';
+  renderRecent();
+}
+
+document.getElementById('btn-new').addEventListener('click',resetToLanding);
+document.getElementById('btn-new-file').addEventListener('click',resetToLanding);
+document.getElementById('btn-restart').addEventListener('click',()=>{
+  currentIndex=0; startTime=null; lastParaIdx=-1; sessionStartIndex=0; sessionStartTime=Date.now();
+  finished.style.display='none'; reader.style.display='flex';
+  updateWordDisplay(); play();
+});
+
+/* ── INIT ── */
+loadEnv();
+renderRecent();
+
+/* ── FIRST-LAUNCH TUTORIAL ── */
+// Tutorial only shown via Guide button
+</script>
+</body>
+</html>
